@@ -15,6 +15,7 @@ type TabId = 'info' | 'prescriptions' | 'history';
 interface ActivityEvent {
   id: string;
   date: string;
+  sortDate: string;
   type: 'patient_created' | 'prescription_issued' | 'prescription_pickup' | 'follow_up';
   description: string;
   details?: string;
@@ -45,13 +46,14 @@ const eventColors: Record<ActivityEvent['type'], string> = {
 function buildTimeline(
   patient: { id: string; createdAt: string; name: string },
   prescriptions: Prescription[],
-  followUps: { id: string; scheduledDate: string; status: FollowUpStatus; notes?: string }[],
+  followUps: { id: string; scheduledDate: string; status: FollowUpStatus; notes?: string; createdAt: string }[],
 ): ActivityEvent[] {
   const events: ActivityEvent[] = [];
 
   events.push({
     id: 'evt-patient-created',
     date: patient.createdAt,
+    sortDate: patient.createdAt,
     type: 'patient_created',
     description: 'Patient registered in the system',
   });
@@ -61,12 +63,14 @@ function buildTimeline(
     events.push({
       id: `evt-rx-issued-${rx.id}`,
       date: rx.createdAt,
+      sortDate: rx.createdAt,
       type: 'prescription_issued',
       description: `Prescription issued: ${names}`,
     });
     events.push({
       id: `evt-rx-pickup-${rx.id}`,
       date: rx.lastPickupDate,
+      sortDate: rx.createdAt,
       type: 'prescription_pickup',
       description: `Prescription picked up: ${names}`,
     });
@@ -77,6 +81,7 @@ function buildTimeline(
     events.push({
       id: `evt-fu-${fu.id}`,
       date: fu.scheduledDate,
+      sortDate: fu.createdAt,
       type: 'follow_up',
       description: `Follow-up: ${label}`,
       details: fu.notes || undefined,
@@ -84,7 +89,7 @@ function buildTimeline(
     });
   }
 
-  events.sort((a, b) => a.date.localeCompare(b.date));
+  events.sort((a, b) => b.sortDate.localeCompare(a.sortDate));
   return events;
 }
 
