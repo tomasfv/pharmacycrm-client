@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { setSearchQuery, setStatusFilter, selectFilteredPatients, selectPatient, fetchPatients, deletePatient, addPatient } from './patientsSlice';
+import { setSearchQuery, setStatusFilter, selectFilteredPatients, selectPatient, fetchPatients, deletePatient, addPatient, updatePatientAsync } from './patientsSlice';
 import { DataGrid, Button, Badge, Card, Input, Select, Dialog, Tooltip } from '@/components/ui';
 import type { Patient } from '@/types';
 import { formatDate, getInitials, getLocalDateString, getLocalDateDaysFromNow } from '@/utils';
@@ -52,6 +52,7 @@ export function PatientsListPage() {
   const filteredPatients = useAppSelector(selectFilteredPatients);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [editPatient, setEditPatient] = useState<Patient | null>(null);
   const [form, setForm] = useState<PatientForm>(emptyForm);
 
   const [page, setPage] = useState(1);
@@ -66,8 +67,36 @@ export function PatientsListPage() {
   };
 
   const handleEdit = (patient: Patient) => {
-    dispatch(selectPatient(patient.id));
-    navigate(`/patients/${patient.id}`);
+    setEditPatient(patient);
+    setForm({
+      name: patient.name,
+      dni: patient.dni,
+      phone: patient.phone,
+      email: patient.email,
+      healthInsurance: patient.healthInsurance,
+      memberNumber: patient.memberNumber,
+      notes: patient.notes || '',
+      status: patient.status,
+    });
+  };
+
+  const handleEditSave = async () => {
+    if (!editPatient) return;
+    if (!form.name.trim()) {
+      showSnackbar('Patient name is required', 'error');
+      return;
+    }
+    try {
+      await dispatch(updatePatientAsync({
+        id: editPatient.id,
+        data: { ...form, notes: form.notes.trim() || undefined },
+      })).unwrap();
+      setEditPatient(null);
+      setForm(emptyForm);
+      showSnackbar('Patient updated successfully', 'success');
+    } catch {
+      showSnackbar('Failed to update patient', 'error');
+    }
   };
 
   const handleDelete = async () => {
@@ -255,6 +284,94 @@ export function PatientsListPage() {
           </Button>
           <Button variant="danger" onClick={handleDelete}>
             Delete
+          </Button>
+        </div>
+      </Dialog>
+
+      <Dialog
+        open={!!editPatient}
+        onClose={() => { setEditPatient(null); setForm(emptyForm); }}
+        title="Edit Patient"
+        size="md"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+            <Input
+              placeholder="Patient full name"
+              value={form.name}
+              onChange={(e) => updateForm('name', e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">National ID</label>
+              <Input
+                placeholder="e.g. 45.678.901"
+                value={form.dni}
+                onChange={(e) => updateForm('dni', e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+              <Input
+                placeholder="e.g. +52 55 1234 5678"
+                value={form.phone}
+                onChange={(e) => updateForm('phone', e.target.value)}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <Input
+              placeholder="patient@email.com"
+              type="email"
+              value={form.email}
+              onChange={(e) => updateForm('email', e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Health Insurance</label>
+              <Input
+                placeholder="e.g. IMSS, ISSSTE"
+                value={form.healthInsurance}
+                onChange={(e) => updateForm('healthInsurance', e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Member #</label>
+              <Input
+                placeholder="Insurance member number"
+                value={form.memberNumber}
+                onChange={(e) => updateForm('memberNumber', e.target.value)}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <Select
+              options={statusOptions}
+              value={form.status}
+              onChange={(e) => updateForm('status', e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+            <Input
+              placeholder="Optional notes"
+              value={form.notes}
+              onChange={(e) => updateForm('notes', e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-3 mt-6">
+          <Button variant="secondary" onClick={() => { setEditPatient(null); setForm(emptyForm); }}>
+            Cancel
+          </Button>
+          <Button onClick={handleEditSave}>
+            Save Changes
           </Button>
         </div>
       </Dialog>
