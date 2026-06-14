@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchPrescriptions, addPrescription } from '@/features/prescriptions/prescriptionsSlice';
-import { fetchMedications, selectMedicationOptions } from '@/features/medications/medicationsSlice';
+import { fetchMedications, selectMedicationOptions, addMedication } from '@/features/medications/medicationsSlice';
 import { fetchFollowUps } from '@/features/followups/followupsSlice';
 import { Card, CardHeader, CardTitle, Badge, Button, Tabs, Dialog, Input, Select } from '@/components/ui';
 import { formatDate, statusLabels, statusColors, getLocalDateString, getLocalDateDaysFromNow } from '@/utils';
@@ -115,6 +115,11 @@ export function PatientDetailPage() {
   const [showRxForm, setShowRxForm] = useState(false);
   const [rxMeds, setRxMeds] = useState<MedicationRow[]>([{ ...emptyMedicationRow }]);
   const [rxNotes, setRxNotes] = useState('');
+  const [showMedForm, setShowMedForm] = useState(false);
+  const [medName, setMedName] = useState('');
+  const [medBrand, setMedBrand] = useState('');
+  const [medDrug, setMedDrug] = useState('');
+  const [medLab, setMedLab] = useState('');
 
   const patientPrescriptions = useMemo(
     () => prescriptions.filter((p) => p.patientId === id),
@@ -166,6 +171,33 @@ export function PatientDetailPage() {
       }
       return updated;
     });
+  };
+
+  const resetMedForm = () => {
+    setMedName('');
+    setMedBrand('');
+    setMedDrug('');
+    setMedLab('');
+  };
+
+  const handleCreateMedication = async () => {
+    if (!medName.trim()) {
+      showSnackbar('Medication name is required', 'error');
+      return;
+    }
+    try {
+      await dispatch(addMedication({
+        name: medName.trim(),
+        brand: medBrand.trim(),
+        drug: medDrug.trim(),
+        laboratory: medLab.trim(),
+      })).unwrap();
+      setShowMedForm(false);
+      resetMedForm();
+      showSnackbar('Medication created successfully', 'success');
+    } catch {
+      showSnackbar('Failed to create medication', 'error');
+    }
   };
 
   const handleCreateRx = async () => {
@@ -291,10 +323,16 @@ export function PatientDetailPage() {
         <Card>
           <CardHeader className="flex items-center justify-between">
             <CardTitle>Prescriptions ({patientPrescriptions.length})</CardTitle>
-            <Button size="sm" onClick={() => setShowRxForm(true)}>
-              <PlusIcon className="h-4 w-4" />
-              New Prescription
-            </Button>
+            <div className="flex gap-2">
+              <Button size="sm" variant="secondary" onClick={() => setShowMedForm(true)}>
+                <PlusIcon className="h-4 w-4" />
+                New Medication
+              </Button>
+              <Button size="sm" onClick={() => setShowRxForm(true)}>
+                <PlusIcon className="h-4 w-4" />
+                New Prescription
+              </Button>
+            </div>
           </CardHeader>
           {patientPrescriptions.length === 0 ? (
             <p className="text-sm text-gray-500">No prescriptions registered.</p>
@@ -452,6 +490,57 @@ export function PatientDetailPage() {
           </Button>
           <Button onClick={handleCreateRx}>
             Create Prescription
+          </Button>
+        </div>
+      </Dialog>
+
+      <Dialog
+        open={showMedForm}
+        onClose={() => { setShowMedForm(false); resetMedForm(); }}
+        title="New Medication"
+        size="md"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Medication Name *</label>
+            <Input
+              placeholder="e.g. Metformina 850mg"
+              value={medName}
+              onChange={(e) => setMedName(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Brand</label>
+            <Input
+              placeholder="e.g. Glucophage"
+              value={medBrand}
+              onChange={(e) => setMedBrand(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Drug</label>
+            <Input
+              placeholder="e.g. Metformina"
+              value={medDrug}
+              onChange={(e) => setMedDrug(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Laboratory</label>
+            <Input
+              placeholder="e.g. Merck"
+              value={medLab}
+              onChange={(e) => setMedLab(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-3 mt-6">
+          <Button variant="secondary" onClick={() => { setShowMedForm(false); resetMedForm(); }}>
+            Cancel
+          </Button>
+          <Button onClick={handleCreateMedication}>
+            Create Medication
           </Button>
         </div>
       </Dialog>

@@ -4,7 +4,7 @@ export interface FollowUp {
   id: string;
   patientId: string;
   patientName: string;
-  treatmentId: string;
+  prescriptionId: string | null;
   medication: string;
   status: FollowUpStatus;
   scheduledDate: string;

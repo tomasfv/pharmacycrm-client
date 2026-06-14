@@ -1,10 +1,9 @@
-import { useMemo } from 'react';
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { moveFollowUp } from '../followupsSlice';
 import { statusLabels, statusColors, formatDate } from '@/utils';
 import { Badge, Tooltip } from '@/components/ui';
-import type { FollowUp, FollowUpStatus, Prescription } from '@/types';
+import type { FollowUp, FollowUpStatus } from '@/types';
 
 const columns: FollowUpStatus[] = [
   'pending_contact',
@@ -22,30 +21,10 @@ const columnIcons: Record<FollowUpStatus, string> = {
   delivered: '\u2705',
 };
 
-function getLatestPrescription(list: Prescription[]): Prescription | null {
-  if (list.length === 0) return null;
-  return list.reduce((a, b) => (a.createdAt > b.createdAt ? a : b));
-}
-
 export function KanbanBoard() {
   const dispatch = useAppDispatch();
   const followUps = useAppSelector((state) => state.followups.followUps);
   const prescriptions = useAppSelector((state) => state.prescriptions.prescriptions);
-
-  const latestRxMap = useMemo(() => {
-    const grouped = new Map<string, Prescription[]>();
-    for (const rx of prescriptions) {
-      const arr = grouped.get(rx.patientId);
-      if (arr) arr.push(rx);
-      else grouped.set(rx.patientId, [rx]);
-    }
-    const latest = new Map<string, Prescription>();
-    for (const [patientId, list] of grouped) {
-      const l = getLatestPrescription(list);
-      if (l) latest.set(patientId, l);
-    }
-    return latest;
-  }, [prescriptions]);
 
   const onDragEnd = (result: DropResult) => {
     if (!result.destination) return;
@@ -54,8 +33,10 @@ export function KanbanBoard() {
     dispatch(moveFollowUp({ followUpId, newStatus }));
   };
 
-  const MedicationPills = ({ patientId }: { patientId: string }) => {
-    const rx = latestRxMap.get(patientId);
+  const MedicationPills = ({ prescriptionId }: { prescriptionId: string | null }) => {
+    const rx = prescriptionId
+      ? prescriptions.find((p) => p.id === prescriptionId)
+      : null;
     if (!rx || rx.medications.length === 0) return null;
     const meds = rx.medications;
     const maxVisible = 2;
@@ -67,7 +48,7 @@ export function KanbanBoard() {
         content={
           <div>
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-              Latest Prescription ({formatDate(rx.createdAt)})
+              Prescription ({formatDate(rx.createdAt)})
             </p>
             <ul className="space-y-1">
               {meds.map((m) => (
@@ -141,7 +122,7 @@ export function KanbanBoard() {
                             <p className="text-sm font-medium text-gray-900">
                               {followUp.patientName}
                             </p>
-                            <MedicationPills patientId={followUp.patientId} />
+                            <MedicationPills prescriptionId={followUp.prescriptionId} />
                             <div className="flex items-center justify-between mt-2">
                               <span className="text-xs text-gray-400">
                                 {formatDate(followUp.scheduledDate)}

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { moveFollowUp } from '../followupsSlice';
 import { DataGrid, Input, Tooltip } from '@/components/ui';
-import type { FollowUp, FollowUpStatus, Prescription, Patient } from '@/types';
+import type { FollowUp, FollowUpStatus, Patient } from '@/types';
 import { formatDate, statusLabels, statusColors } from '@/utils';
 import { MagnifyingGlassIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 
@@ -95,11 +95,6 @@ function StatusDropdown({
   );
 }
 
-function getLatestPrescription(list: Prescription[]): Prescription | null {
-  if (list.length === 0) return null;
-  return list.reduce((a, b) => (a.createdAt > b.createdAt ? a : b));
-}
-
 export function FollowUpTable() {
   const dispatch = useAppDispatch();
   const followUps = useAppSelector((state) => state.followups.followUps);
@@ -114,21 +109,6 @@ export function FollowUpTable() {
     for (const p of patients) map.set(p.id, p);
     return map;
   }, [patients]);
-
-  const latestRxMap = useMemo(() => {
-    const grouped = new Map<string, Prescription[]>();
-    for (const rx of prescriptions) {
-      const arr = grouped.get(rx.patientId);
-      if (arr) arr.push(rx);
-      else grouped.set(rx.patientId, [rx]);
-    }
-    const latest = new Map<string, Prescription>();
-    for (const [patientId, list] of grouped) {
-      const l = getLatestPrescription(list);
-      if (l) latest.set(patientId, l);
-    }
-    return latest;
-  }, [prescriptions]);
 
   const filtered = useMemo(
     () =>
@@ -155,16 +135,14 @@ export function FollowUpTable() {
     dispatch(moveFollowUp({ followUpId, newStatus }));
   };
 
-  const getLastPickup = (patientId: string) => {
-    const rx = latestRxMap.get(patientId);
-    if (!rx) return '\u2014';
-    return formatDate(rx.lastPickupDate);
-  };
-
-  const getNextPickup = (patientId: string) => {
-    const rx = latestRxMap.get(patientId);
-    if (!rx) return '\u2014';
-    return formatDate(rx.nextPickupDate);
+  const getPickupDates = (f: FollowUp) => {
+    const rx = f.prescriptionId
+      ? prescriptions.find((p) => p.id === f.prescriptionId)
+      : null;
+    return {
+      lastPickup: rx ? formatDate(rx.lastPickupDate) : '\u2014',
+      nextPickup: rx ? formatDate(rx.nextPickupDate) : '\u2014',
+    };
   };
 
   const columns = [
@@ -213,21 +191,23 @@ export function FollowUpTable() {
       key: 'lastPickupDate',
       header: 'LAST PICKUP',
       render: (f: FollowUp) => (
-        <span className="text-gray-700">{getLastPickup(f.patientId)}</span>
+        <span className="text-gray-700">{getPickupDates(f).lastPickup}</span>
       ),
     },
     {
       key: 'nextPickupDate',
       header: 'NEXT PICKUP',
       render: (f: FollowUp) => (
-        <span className="text-gray-700">{getNextPickup(f.patientId)}</span>
+        <span className="text-gray-700">{getPickupDates(f).nextPickup}</span>
       ),
     },
     {
       key: 'medications',
       header: 'MEDICATION',
       render: (f: FollowUp) => {
-        const rx = latestRxMap.get(f.patientId);
+        const rx = f.prescriptionId
+          ? prescriptions.find((p) => p.id === f.prescriptionId)
+          : null;
         if (!rx || rx.medications.length === 0) return '\u2014';
         const meds = rx.medications;
         const maxVisible = 2;
@@ -238,7 +218,7 @@ export function FollowUpTable() {
             content={
               <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                  Latest Prescription ({formatDate(rx.createdAt)})
+                  Prescription ({formatDate(rx.createdAt)})
                 </p>
                 <ul className="space-y-1">
                   {meds.map((m) => (
