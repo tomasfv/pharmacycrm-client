@@ -4,7 +4,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setSearchQuery, setStatusFilter, selectFilteredPatients, selectPatient, deletePatient, addPatient } from './patientsSlice';
 import { DataGrid, Button, Badge, Card, Input, Select, Dialog, Tooltip } from '@/components/ui';
 import type { Patient } from '@/types';
-import { formatDate, getInitials } from '@/utils';
+import { formatDate, getInitials, getLocalDateString, getLocalDateDaysFromNow } from '@/utils';
 import { PencilSquareIcon, TrashIcon, EyeIcon, MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { useSnackbar } from '@/components/ui';
 
@@ -93,9 +93,9 @@ export function PatientsListPage() {
       memberNumber: form.memberNumber.trim() || 'N/A',
       notes: form.notes.trim() || undefined,
       status: form.status,
-      nextFollowUpDate: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
-      createdAt: new Date().toISOString().split('T')[0],
-      updatedAt: new Date().toISOString().split('T')[0],
+      nextFollowUpDate: getLocalDateDaysFromNow(30),
+      createdAt: getLocalDateString(),
+      updatedAt: getLocalDateString(),
     };
     dispatch(addPatient(newPatient));
     setShowCreate(false);

@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { mockFollowUps } from '@/mock';
+import { getLocalDateString } from '@/utils';
 
 interface DashboardState {
   metrics: {
@@ -12,7 +13,7 @@ interface DashboardState {
 }
 
 const calculateMetrics = () => {
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateString();
   const patientsToContactToday = mockFollowUps.filter(
     (f) => f.scheduledDate === today && f.status === 'pending_contact',
   ).length;

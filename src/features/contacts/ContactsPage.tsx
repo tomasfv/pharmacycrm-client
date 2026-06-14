@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { addContact, updateContact, deleteContact } from './contactsSlice';
 import { Card, Button, Input, Select, Dialog, DataGrid, Badge, Tooltip } from '@/components/ui';
 import { useSnackbar } from '@/components/ui';
+import { getLocalDateString } from '@/utils';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -99,7 +100,7 @@ export function ContactsPage() {
       const newContact: Contact = {
         id: `C-${String(contacts.length + 1).padStart(3, '0')}`,
         ...data,
-        createdAt: new Date().toISOString().split('T')[0],
+        createdAt: getLocalDateString(),
       };
       dispatch(addContact(newContact));
       showSnackbar('Contact added', 'success');

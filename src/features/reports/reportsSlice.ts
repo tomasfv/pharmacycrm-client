@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { mockPatients, mockPrescriptions, mockFollowUps } from '@/mock';
 import type { FollowUpStatus } from '@/types';
+import { getLocalDateString } from '@/utils';
 
 interface ReportsState {
   activePatients: number;
@@ -42,7 +43,7 @@ const initialState: ReportsState = {
   activePatients: mockPatients.filter((p) => p.status === 'active').length,
   activePrescriptions: mockPrescriptions.length,
   overduePatients: mockFollowUps.filter(
-    (f) => f.scheduledDate < new Date().toISOString().split('T')[0] && f.status !== 'delivered',
+    (f) => f.scheduledDate < getLocalDateString() && f.status !== 'delivered',
   ).length,
   monthlyFollowUps: getMonthlyData(),
   statusDistribution: getStatusDistribution(),

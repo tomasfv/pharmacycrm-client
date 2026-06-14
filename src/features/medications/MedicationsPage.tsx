@@ -3,7 +3,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { addMedication, updateMedication, deleteMedication, selectMedicationOptions } from './medicationsSlice';
 import { DataGrid, Button, Card, Dialog, Input } from '@/components/ui';
 import type { Medication } from '@/types';
-import { formatDate } from '@/utils';
+import { formatDate, getLocalDateString } from '@/utils';
 import { PlusIcon, PencilSquareIcon, TrashIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { useSnackbar } from '@/components/ui';
 
@@ -71,7 +71,7 @@ export function MedicationsPage() {
         brand: brand.trim(),
         drug: drug.trim(),
         laboratory: laboratory.trim(),
-        createdAt: new Date().toISOString().split('T')[0],
+        createdAt: getLocalDateString(),
       }));
       showSnackbar('Medication created successfully', 'success');
     }

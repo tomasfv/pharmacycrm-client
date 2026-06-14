@@ -4,7 +4,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { addPrescription } from '@/features/prescriptions/prescriptionsSlice';
 import { selectMedicationOptions } from '@/features/medications/medicationsSlice';
 import { Card, CardHeader, CardTitle, Badge, Button, Tabs, Dialog, Input, Select } from '@/components/ui';
-import { formatDate, statusLabels, statusColors } from '@/utils';
+import { formatDate, statusLabels, statusColors, getLocalDateString, getLocalDateDaysFromNow } from '@/utils';
 import { mockFollowUps } from '@/mock';
 import { ArrowLeftIcon, UserIcon, DocumentTextIcon, CubeIcon, ArrowPathIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useSnackbar } from '@/components/ui';
@@ -183,10 +183,10 @@ export function PatientDetailPage() {
         patientId: patient.id,
         patientName: patient.name,
         medications,
-        lastPickupDate: new Date().toISOString().split('T')[0],
-        nextPickupDate: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
-        createdAt: new Date().toISOString().split('T')[0],
-        updatedAt: new Date().toISOString().split('T')[0],
+        lastPickupDate: getLocalDateString(),
+        nextPickupDate: getLocalDateDaysFromNow(30),
+        createdAt: getLocalDateString(),
+        updatedAt: getLocalDateString(),
       }),
     );
     setShowRxForm(false);
