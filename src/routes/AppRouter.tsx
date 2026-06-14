@@ -10,6 +10,7 @@ import { ReportsPage } from '@/features/reports/ReportsPage';
 import { NotificationsPage } from '@/features/notifications/NotificationsPage';
 import { SettingsPage } from '@/features/settings/SettingsPage';
 import { MedicationsPage } from '@/features/medications/MedicationsPage';
+import { UsersPage } from '@/features/users/UsersPage';
 
 export function AppRouter() {
   return (
@@ -26,6 +27,7 @@ export function AppRouter() {
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="medications" element={<MedicationsPage />} />
+        <Route path="users" element={<UsersPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

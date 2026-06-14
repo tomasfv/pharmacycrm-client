@@ -9,6 +9,7 @@ import reportsReducer from '@/features/reports/reportsSlice';
 import notificationsReducer from '@/features/notifications/notificationsSlice';
 import settingsReducer from '@/features/settings/settingsSlice';
 import medicationsReducer from '@/features/medications/medicationsSlice';
+import usersReducer from '@/features/users/usersSlice';
 
 export const store = configureStore({
   reducer: {
@@ -22,6 +23,7 @@ export const store = configureStore({
     notifications: notificationsReducer,
     settings: settingsReducer,
     medications: medicationsReducer,
+    users: usersReducer,
   },
 });
 

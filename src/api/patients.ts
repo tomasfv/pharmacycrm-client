@@ -1,21 +1,15 @@
 import apiClient from './client';
-
-export interface PaginatedResult<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-}
+import type { ApiResponse } from '@/types/common';
 
 export const patientsApi = {
   getAll: (params?: { search?: string; status?: string; page?: number; limit?: number }) =>
-    apiClient.get<PaginatedResult<any>>('/patients', { params }),
+    apiClient.get<ApiResponse<any>>('/patients', { params }),
   getById: (id: string) =>
-    apiClient.get<any>(`/patients/${id}`),
+    apiClient.get<ApiResponse<any>>(`/patients/${id}`),
   create: (data: Record<string, unknown>) =>
-    apiClient.post<any>('/patients', data),
+    apiClient.post<ApiResponse<any>>('/patients', data),
   update: (id: string, data: Record<string, unknown>) =>
-    apiClient.put<any>(`/patients/${id}`, data),
+    apiClient.put<ApiResponse<any>>(`/patients/${id}`, data),
   delete: (id: string) =>
     apiClient.delete(`/patients/${id}`),
 };
