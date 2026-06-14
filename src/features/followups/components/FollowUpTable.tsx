@@ -137,6 +137,7 @@ export function FollowUpTable() {
         if (!patient) return true;
         const q = search.toLowerCase();
         return (
+          !search ||
           patient.name.toLowerCase().includes(q) ||
           patient.dni.toLowerCase().includes(q) ||
           patient.healthInsurance.toLowerCase().includes(q) ||

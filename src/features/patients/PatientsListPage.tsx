@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { setSearchQuery, setStatusFilter, selectFilteredPatients, selectPatient, deletePatient, addPatient } from './patientsSlice';
+import { setSearchQuery, setStatusFilter, selectFilteredPatients, selectPatient, fetchPatients, deletePatient, addPatient } from './patientsSlice';
 import { DataGrid, Button, Badge, Card, Input, Select, Dialog, Tooltip } from '@/components/ui';
 import type { Patient } from '@/types';
 import { formatDate, getInitials, getLocalDateString, getLocalDateDaysFromNow } from '@/utils';
@@ -44,7 +44,11 @@ export function PatientsListPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { showSnackbar } = useSnackbar();
-  const { searchQuery, statusFilter, patients } = useAppSelector((state) => state.patients);
+  const { searchQuery, statusFilter, patients, loading } = useAppSelector((state) => state.patients);
+
+  useEffect(() => {
+    dispatch(fetchPatients());
+  }, [dispatch]);
   const filteredPatients = useAppSelector(selectFilteredPatients);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
@@ -66,41 +70,41 @@ export function PatientsListPage() {
     navigate(`/patients/${patient.id}`);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (deleteId) {
-      dispatch(deletePatient(deleteId));
-      setDeleteId(null);
-      showSnackbar('Patient deleted successfully', 'success');
+      try {
+        await dispatch(deletePatient(deleteId)).unwrap();
+        setDeleteId(null);
+        showSnackbar('Patient deleted successfully', 'success');
+      } catch {
+        showSnackbar('Failed to delete patient', 'error');
+      }
     }
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!form.name.trim()) {
       showSnackbar('Patient name is required', 'error');
       return;
     }
-    const maxId = patients.reduce((max, p) => {
-      const num = parseInt(p.id.replace('P-', ''), 10);
-      return num > max ? num : max;
-    }, 0);
-    const newPatient: Patient = {
-      id: `P-${String(maxId + 1).padStart(3, '0')}`,
-      name: form.name.trim(),
-      dni: form.dni.trim(),
-      phone: form.phone.trim(),
-      email: form.email.trim(),
-      healthInsurance: form.healthInsurance.trim() || 'N/A',
-      memberNumber: form.memberNumber.trim() || 'N/A',
-      notes: form.notes.trim() || undefined,
-      status: form.status,
-      nextFollowUpDate: getLocalDateDaysFromNow(30),
-      createdAt: getLocalDateString(),
-      updatedAt: getLocalDateString(),
-    };
-    dispatch(addPatient(newPatient));
-    setShowCreate(false);
-    setForm(emptyForm);
-    showSnackbar('Patient created successfully', 'success');
+    try {
+      await dispatch(addPatient({
+        name: form.name.trim(),
+        dni: form.dni.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim(),
+        healthInsurance: form.healthInsurance.trim() || 'N/A',
+        memberNumber: form.memberNumber.trim() || 'N/A',
+        notes: form.notes.trim() || undefined,
+        status: form.status,
+        nextFollowUpDate: getLocalDateDaysFromNow(30),
+      })).unwrap();
+      setShowCreate(false);
+      setForm(emptyForm);
+      showSnackbar('Patient created successfully', 'success');
+    } catch {
+      showSnackbar('Failed to create patient', 'error');
+    }
   };
 
   const updateForm = (field: keyof PatientForm, value: string) => {

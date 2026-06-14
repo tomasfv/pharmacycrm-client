@@ -1,4 +1,8 @@
-import { useAppSelector } from '@/store/hooks';
+import { useEffect } from 'react';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchPatients } from '@/features/patients/patientsSlice';
+import { fetchPrescriptions } from '@/features/prescriptions/prescriptionsSlice';
+import { fetchFollowUps } from '@/features/followups/followupsSlice';
 import { selectReportsData } from './reportsSlice';
 import { Card, CardHeader, CardTitle } from '@/components/ui';
 import {
@@ -36,7 +40,14 @@ function StatCard({ title, value, icon: Icon, color }: { title: string; value: n
 }
 
 export function ReportsPage() {
+  const dispatch = useAppDispatch();
   const data = useAppSelector(selectReportsData);
+
+  useEffect(() => {
+    dispatch(fetchPatients());
+    dispatch(fetchPrescriptions());
+    dispatch(fetchFollowUps());
+  }, [dispatch]);
 
   return (
     <div className="space-y-6">

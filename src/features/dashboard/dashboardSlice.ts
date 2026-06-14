@@ -1,49 +1,43 @@
-import { createSlice } from '@reduxjs/toolkit';
-import { mockFollowUps } from '@/mock';
-import { getLocalDateString } from '@/utils';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { dashboardApi, type DashboardMetrics } from '@/api/dashboard';
 
 interface DashboardState {
-  metrics: {
-    patientsToContactToday: number;
-    pendingPrescriptions: number;
-    readyForPickup: number;
-    overduePatients: number;
-  };
+  metrics: DashboardMetrics;
   loading: boolean;
 }
 
-const calculateMetrics = () => {
-  const today = getLocalDateString();
-  const patientsToContactToday = mockFollowUps.filter(
-    (f) => f.scheduledDate === today && f.status === 'pending_contact',
-  ).length;
-  const pendingPrescriptions = mockFollowUps.filter(
-    (f) => f.status === 'prescription_received',
-  ).length;
-  const readyForPickup = mockFollowUps.filter(
-    (f) => f.status === 'prepared',
-  ).length;
-  const overduePatients = mockFollowUps.filter(
-    (f) => f.scheduledDate < today && f.status !== 'delivered',
-  ).length;
-
-  return {
-    patientsToContactToday,
-    pendingPrescriptions,
-    readyForPickup,
-    overduePatients,
-  };
-};
-
 const initialState: DashboardState = {
-  metrics: calculateMetrics(),
+  metrics: {
+    patientsToContactToday: 0,
+    pendingPrescriptions: 0,
+    readyForPickup: 0,
+    overduePatients: 0,
+  },
   loading: false,
 };
+
+export const fetchDashboardMetrics = createAsyncThunk(
+  'dashboard/fetchMetrics',
+  async (_, { rejectWithValue }) => {
+    try {
+      const { data } = await dashboardApi.getMetrics();
+      return data.data as DashboardMetrics;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || 'Failed to fetch dashboard metrics');
+    }
+  },
+);
 
 const dashboardSlice = createSlice({
   name: 'dashboard',
   initialState,
   reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchDashboardMetrics.pending, (state) => { state.loading = true; })
+      .addCase(fetchDashboardMetrics.fulfilled, (state, action) => { state.loading = false; state.metrics = action.payload; })
+      .addCase(fetchDashboardMetrics.rejected, (state) => { state.loading = false; });
+  },
 });
 
 export const selectDashboardMetrics = (state: { dashboard: DashboardState }) =>

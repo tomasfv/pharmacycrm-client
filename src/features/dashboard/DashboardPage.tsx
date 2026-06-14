@@ -1,4 +1,9 @@
-import { useAppSelector } from '@/store/hooks';
+import { useEffect } from 'react';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchDashboardMetrics } from './dashboardSlice';
+import { fetchFollowUps } from '@/features/followups/followupsSlice';
+import { fetchPrescriptions } from '@/features/prescriptions/prescriptionsSlice';
+import { fetchContacts } from '@/features/contacts/contactsSlice';
 import { KPICard } from './KPICard';
 import { UpcomingFollowUps } from './UpcomingFollowUps';
 import { RecentActivity } from './RecentActivity';
@@ -12,7 +17,16 @@ import {
 import { selectDashboardMetrics } from './dashboardSlice';
 
 export function DashboardPage() {
+  const dispatch = useAppDispatch();
   const metrics = useAppSelector(selectDashboardMetrics);
+  const { loading } = useAppSelector((state) => state.dashboard);
+
+  useEffect(() => {
+    dispatch(fetchDashboardMetrics());
+    dispatch(fetchFollowUps());
+    dispatch(fetchPrescriptions());
+    dispatch(fetchContacts());
+  }, [dispatch]);
 
   return (
     <div className="space-y-6">

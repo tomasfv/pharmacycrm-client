@@ -1,14 +1,12 @@
 import apiClient from './client';
-import type { Prescription } from '@/types';
 
 export const prescriptionsApi = {
-  getAll: () => apiClient.get<Prescription[]>('/prescriptions'),
-  getById: (id: string) => apiClient.get<Prescription>(`/prescriptions/${id}`),
   getByPatientId: (patientId: string) =>
-    apiClient.get<Prescription[]>(`/prescriptions?patientId=${patientId}`),
-  create: (data: Omit<Prescription, 'id' | 'createdAt' | 'updatedAt'>) =>
-    apiClient.post<Prescription>('/prescriptions', data),
-  update: (id: string, data: Partial<Prescription>) =>
-    apiClient.put<Prescription>(`/prescriptions/${id}`, data),
-  delete: (id: string) => apiClient.delete(`/prescriptions/${id}`),
+    apiClient.get<any[]>('/prescriptions', { params: { patientId } }),
+  create: (data: Record<string, unknown>) =>
+    apiClient.post<any>('/prescriptions', data),
+  update: (id: string, data: Record<string, unknown>) =>
+    apiClient.put<any>(`/prescriptions/${id}`, data),
+  delete: (id: string) =>
+    apiClient.delete(`/prescriptions/${id}`),
 };

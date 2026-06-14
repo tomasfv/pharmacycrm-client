@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { addContact, updateContact, deleteContact } from './contactsSlice';
+import { fetchContacts, addContact, updateContact, deleteContact } from './contactsSlice';
 import { Card, Button, Input, Select, Dialog, DataGrid, Badge, Tooltip } from '@/components/ui';
 import { useSnackbar } from '@/components/ui';
 import { getLocalDateString } from '@/utils';
@@ -49,6 +49,10 @@ export function ContactsPage() {
   const dispatch = useAppDispatch();
   const contacts = useAppSelector((state) => state.contacts.contacts);
   const { showSnackbar } = useSnackbar();
+
+  useEffect(() => {
+    dispatch(fetchContacts());
+  }, [dispatch]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Contact | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -92,27 +96,30 @@ export function ContactsPage() {
     setOpen(true);
   };
 
-  const onSubmit = (data: ContactForm) => {
-    if (editing) {
-      dispatch(updateContact({ ...editing, ...data }));
-      showSnackbar('Contact updated', 'success');
-    } else {
-      const newContact: Contact = {
-        id: `C-${String(contacts.length + 1).padStart(3, '0')}`,
-        ...data,
-        createdAt: getLocalDateString(),
-      };
-      dispatch(addContact(newContact));
-      showSnackbar('Contact added', 'success');
+  const onSubmit = async (data: ContactForm) => {
+    try {
+      if (editing) {
+        await dispatch(updateContact({ ...editing, ...data })).unwrap();
+        showSnackbar('Contact updated', 'success');
+      } else {
+        await dispatch(addContact(data as any)).unwrap();
+        showSnackbar('Contact added', 'success');
+      }
+      setOpen(false);
+    } catch {
+      showSnackbar('Failed to save contact', 'error');
     }
-    setOpen(false);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (deleteId) {
-      dispatch(deleteContact(deleteId));
-      setDeleteId(null);
-      showSnackbar('Contact deleted', 'success');
+      try {
+        await dispatch(deleteContact(deleteId)).unwrap();
+        setDeleteId(null);
+        showSnackbar('Contact deleted', 'success');
+      } catch {
+        showSnackbar('Failed to delete contact', 'error');
+      }
     }
   };
 

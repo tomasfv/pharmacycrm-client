@@ -1,5 +1,8 @@
+import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { setViewMode } from './followupsSlice';
+import { setViewMode, fetchFollowUps } from './followupsSlice';
+import { fetchPrescriptions } from '@/features/prescriptions/prescriptionsSlice';
+import { fetchPatients } from '@/features/patients/patientsSlice';
 import { KanbanBoard } from './components/KanbanBoard';
 import { FollowUpTable } from './components/FollowUpTable';
 import { Button } from '@/components/ui';
@@ -8,6 +11,12 @@ import { Squares2X2Icon, ListBulletIcon } from '@heroicons/react/24/outline';
 export function FollowUpsPage() {
   const dispatch = useAppDispatch();
   const viewMode = useAppSelector((state) => state.followups.viewMode);
+
+  useEffect(() => {
+    dispatch(fetchFollowUps());
+    dispatch(fetchPrescriptions());
+    dispatch(fetchPatients());
+  }, [dispatch]);
 
   return (
     <div className="space-y-6">

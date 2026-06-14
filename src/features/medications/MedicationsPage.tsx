@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { addMedication, updateMedication, deleteMedication, selectMedicationOptions } from './medicationsSlice';
+import { fetchMedications, addMedication, updateMedication, deleteMedication, selectMedicationOptions } from './medicationsSlice';
 import { DataGrid, Button, Card, Dialog, Input } from '@/components/ui';
 import type { Medication } from '@/types';
 import { formatDate, getLocalDateString } from '@/utils';
@@ -11,6 +11,11 @@ export function MedicationsPage() {
   const dispatch = useAppDispatch();
   const { showSnackbar } = useSnackbar();
   const medications = useAppSelector((state) => state.medications.medications);
+  const loading = useAppSelector((state) => state.medications.loading);
+
+  useEffect(() => {
+    dispatch(fetchMedications());
+  }, [dispatch]);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const perPage = 10;
@@ -52,38 +57,46 @@ export function MedicationsPage() {
     setShowForm(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim()) {
       showSnackbar('Medication name is required', 'error');
       return;
     }
-    if (editing) {
-      dispatch(updateMedication({ ...editing, name: name.trim(), brand: brand.trim(), drug: drug.trim(), laboratory: laboratory.trim() }));
-      showSnackbar('Medication updated successfully', 'success');
-    } else {
-      const maxId = medications.reduce((max, m) => {
-        const num = parseInt(m.id.replace('M-', ''), 10);
-        return num > max ? num : max;
-      }, 0);
-      dispatch(addMedication({
-        id: `M-${String(maxId + 1).padStart(3, '0')}`,
-        name: name.trim(),
-        brand: brand.trim(),
-        drug: drug.trim(),
-        laboratory: laboratory.trim(),
-        createdAt: getLocalDateString(),
-      }));
-      showSnackbar('Medication created successfully', 'success');
+    try {
+      if (editing) {
+        await dispatch(updateMedication({
+          ...editing,
+          name: name.trim(),
+          brand: brand.trim(),
+          drug: drug.trim(),
+          laboratory: laboratory.trim(),
+        })).unwrap();
+        showSnackbar('Medication updated successfully', 'success');
+      } else {
+        await dispatch(addMedication({
+          name: name.trim(),
+          brand: brand.trim(),
+          drug: drug.trim(),
+          laboratory: laboratory.trim(),
+        })).unwrap();
+        showSnackbar('Medication created successfully', 'success');
+      }
+      setShowForm(false);
+      resetForm();
+    } catch {
+      showSnackbar('Failed to save medication', 'error');
     }
-    setShowForm(false);
-    resetForm();
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (deleteId) {
-      dispatch(deleteMedication(deleteId));
-      setDeleteId(null);
-      showSnackbar('Medication deleted successfully', 'success');
+      try {
+        await dispatch(deleteMedication(deleteId)).unwrap();
+        setDeleteId(null);
+        showSnackbar('Medication deleted successfully', 'success');
+      } catch {
+        showSnackbar('Failed to delete medication', 'error');
+      }
     }
   };
 

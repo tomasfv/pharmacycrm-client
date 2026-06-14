@@ -1,5 +1,6 @@
+import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { markAsRead, markAllAsRead } from './notificationsSlice';
+import { fetchNotifications, markAsRead, markAllAsRead } from './notificationsSlice';
 import { Card, CardHeader, CardTitle, Button, Badge } from '@/components/ui';
 import { formatDateTime } from '@/utils';
 import { BellIcon, ExclamationCircleIcon, CalendarDaysIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
@@ -17,6 +18,10 @@ export function NotificationsPage() {
   const notifications = useAppSelector((state) => state.notifications.notifications);
   const unread = notifications.filter((n) => !n.read).length;
 
+  useEffect(() => {
+    dispatch(fetchNotifications());
+  }, [dispatch]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -27,7 +32,7 @@ export function NotificationsPage() {
           </p>
         </div>
         {unread > 0 && (
-          <Button variant="secondary" onClick={() => dispatch(markAllAsRead())}>
+          <Button variant="secondary" onClick={async () => { try { await dispatch(markAllAsRead()).unwrap(); } catch {} }}>
             Mark All as Read
           </Button>
         )}
@@ -49,7 +54,7 @@ export function NotificationsPage() {
                   'flex items-start gap-4 p-4 rounded-xl border transition-colors cursor-pointer',
                   notification.read ? 'bg-white border-gray-200' : 'bg-primary-50/30 border-primary-200',
                 )}
-                onClick={() => dispatch(markAsRead(notification.id))}
+                onClick={async () => { try { await dispatch(markAsRead(notification.id)).unwrap(); } catch {} }}
               >
                 <div
                   className={cn(

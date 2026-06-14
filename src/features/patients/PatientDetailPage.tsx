@@ -1,11 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { addPrescription } from '@/features/prescriptions/prescriptionsSlice';
-import { selectMedicationOptions } from '@/features/medications/medicationsSlice';
+import { fetchPrescriptions, addPrescription } from '@/features/prescriptions/prescriptionsSlice';
+import { fetchMedications, selectMedicationOptions } from '@/features/medications/medicationsSlice';
+import { fetchFollowUps } from '@/features/followups/followupsSlice';
 import { Card, CardHeader, CardTitle, Badge, Button, Tabs, Dialog, Input, Select } from '@/components/ui';
 import { formatDate, statusLabels, statusColors, getLocalDateString, getLocalDateDaysFromNow } from '@/utils';
-import { mockFollowUps } from '@/mock';
 import { ArrowLeftIcon, UserIcon, DocumentTextIcon, CubeIcon, ArrowPathIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useSnackbar } from '@/components/ui';
 import type { Prescription, PrescriptionMedication, FollowUpStatus } from '@/types';
@@ -45,7 +45,7 @@ const eventColors: Record<ActivityEvent['type'], string> = {
 function buildTimeline(
   patient: { id: string; createdAt: string; name: string },
   prescriptions: Prescription[],
-  followUps: typeof mockFollowUps,
+  followUps: { id: string; scheduledDate: string; status: FollowUpStatus; notes?: string }[],
 ): ActivityEvent[] {
   const events: ActivityEvent[] = [];
 
@@ -105,6 +105,12 @@ export function PatientDetailPage() {
   );
   const prescriptions = useAppSelector((state) => state.prescriptions.prescriptions);
   const medicationOptions = useAppSelector(selectMedicationOptions);
+
+  useEffect(() => {
+    dispatch(fetchMedications());
+    dispatch(fetchPrescriptions(id));
+    dispatch(fetchFollowUps());
+  }, [dispatch, id]);
   const [activeTab, setActiveTab] = useState<TabId>('info');
   const [showRxForm, setShowRxForm] = useState(false);
   const [rxMeds, setRxMeds] = useState<MedicationRow[]>([{ ...emptyMedicationRow }]);
@@ -115,9 +121,10 @@ export function PatientDetailPage() {
     [id, prescriptions],
   );
 
+  const allFollowUps = useAppSelector((state) => state.followups.followUps);
   const patientFollowUps = useMemo(
-    () => mockFollowUps.filter((f) => f.patientId === id),
-    [id],
+    () => allFollowUps.filter((f) => f.patientId === id),
+    [id, allFollowUps],
   );
 
   const timeline = useMemo(
@@ -161,38 +168,34 @@ export function PatientDetailPage() {
     });
   };
 
-  const handleCreateRx = () => {
+  const handleCreateRx = async () => {
     const validMeds = rxMeds.filter((m) => m.medicationId && m.quantity && m.frequency);
     if (validMeds.length === 0) {
       showSnackbar('Add at least one medication with quantity and frequency', 'error');
       return;
     }
-    const maxId = prescriptions.reduce((max, p) => {
-      const num = parseInt(p.id.replace('T-', ''), 10);
-      return num > max ? num : max;
-    }, 0);
     const medications: PrescriptionMedication[] = validMeds.map((m) => ({
       medicationId: m.medicationId,
       medicationName: m.medicationName,
       quantity: m.quantity,
       frequency: m.frequency,
     }));
-    dispatch(
-      addPrescription({
-        id: `T-${String(maxId + 1).padStart(3, '0')}`,
+    try {
+      await dispatch(addPrescription({
         patientId: patient.id,
         patientName: patient.name,
         medications,
         lastPickupDate: getLocalDateString(),
         nextPickupDate: getLocalDateDaysFromNow(30),
-        createdAt: getLocalDateString(),
-        updatedAt: getLocalDateString(),
-      }),
-    );
-    setShowRxForm(false);
-    setRxMeds([{ ...emptyMedicationRow }]);
-    setRxNotes('');
-    showSnackbar('Prescription created successfully', 'success');
+      })).unwrap();
+      dispatch(fetchFollowUps());
+      setShowRxForm(false);
+      setRxMeds([{ ...emptyMedicationRow }]);
+      setRxNotes('');
+      showSnackbar('Prescription created successfully', 'success');
+    } catch {
+      showSnackbar('Failed to create prescription', 'error');
+    }
   };
 
   return (

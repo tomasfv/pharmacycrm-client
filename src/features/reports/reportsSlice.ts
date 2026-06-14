@@ -1,9 +1,7 @@
-import { createSlice } from '@reduxjs/toolkit';
-import { mockPatients, mockPrescriptions, mockFollowUps } from '@/mock';
-import type { FollowUpStatus } from '@/types';
 import { getLocalDateString } from '@/utils';
+import type { FollowUpStatus } from '@/types';
 
-interface ReportsState {
+interface ReportsData {
   activePatients: number;
   activePrescriptions: number;
   overduePatients: number;
@@ -11,50 +9,43 @@ interface ReportsState {
   statusDistribution: { status: FollowUpStatus; count: number }[];
 }
 
-const getMonthlyData = () => {
-  const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  ];
-  return months.map((month, idx) => {
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+export const selectReportsData = (state: any): ReportsData => {
+  const patients = state.patients?.patients || [];
+  const prescriptions = state.prescriptions?.prescriptions || [];
+  const followUps = state.followups?.followUps || [];
+  const today = getLocalDateString();
+
+  const activePatients = patients.filter((p: any) => p.status === 'active').length;
+  const activePrescriptions = prescriptions.length;
+  const overduePatients = followUps.filter(
+    (f: any) => f.scheduledDate < today && f.status !== 'delivered',
+  ).length;
+
+  const monthlyFollowUps = months.slice(0, 6).map((month, idx) => {
     const m = String(idx + 1).padStart(2, '0');
-    const count = mockFollowUps.filter((f) => {
-      const date = new Date(f.createdAt);
-      return date.getMonth() === idx;
+    const count = followUps.filter((f: any) => {
+      const d = new Date(f.createdAt);
+      return d.getMonth() === idx;
     }).length;
     return { month, count };
   });
-};
 
-const getStatusDistribution = () => {
   const statuses: FollowUpStatus[] = [
-    'pending_contact',
-    'contacted',
-    'prescription_received',
-    'prepared',
-    'delivered',
+    'pending_contact', 'contacted', 'prescription_received', 'prepared', 'delivered',
   ];
-  return statuses.map((status) => ({
+  const statusDistribution = statuses.map((status) => ({
     status,
-    count: mockFollowUps.filter((f) => f.status === status).length,
+    count: followUps.filter((f: any) => f.status === status).length,
   }));
+
+  return { activePatients, activePrescriptions, overduePatients, monthlyFollowUps, statusDistribution };
 };
 
-const initialState: ReportsState = {
-  activePatients: mockPatients.filter((p) => p.status === 'active').length,
-  activePrescriptions: mockPrescriptions.length,
-  overduePatients: mockFollowUps.filter(
-    (f) => f.scheduledDate < getLocalDateString() && f.status !== 'delivered',
-  ).length,
-  monthlyFollowUps: getMonthlyData(),
-  statusDistribution: getStatusDistribution(),
-};
-
-const reportsSlice = createSlice({
+const reportsSlice: any = {
   name: 'reports',
-  initialState,
-  reducers: {},
-});
+  reducer: (state = {}) => state,
+};
 
-export const selectReportsData = (state: { reports: ReportsState }) => state.reports;
-
-export default reportsSlice.reducer;
+export default reportsSlice;
