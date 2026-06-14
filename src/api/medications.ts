@@ -1,12 +1,14 @@
 import apiClient from './client';
+import type { ApiResponse } from '@/types/common';
+import type { Medication } from '@/types';
 
 export const medicationsApi = {
   getAll: (params?: { search?: string; page?: number; limit?: number }) =>
-    apiClient.get<any>('/medications', { params }),
+    apiClient.get<ApiResponse<Medication[]>>('/medications', { params }),
   create: (data: Record<string, unknown>) =>
-    apiClient.post<any>('/medications', data),
+    apiClient.post<ApiResponse<Medication>>('/medications', data),
   update: (id: string, data: Record<string, unknown>) =>
-    apiClient.put<any>(`/medications/${id}`, data),
+    apiClient.put<ApiResponse<Medication>>(`/medications/${id}`, data),
   delete: (id: string) =>
     apiClient.delete(`/medications/${id}`),
 };

@@ -1,4 +1,5 @@
 import apiClient from './client';
+import type { ApiResponse } from '@/types/common';
 
 export interface DashboardMetrics {
   patientsToContactToday: number;
@@ -9,5 +10,5 @@ export interface DashboardMetrics {
 
 export const dashboardApi = {
   getMetrics: () =>
-    apiClient.get<DashboardMetrics>('/dashboard/metrics'),
+    apiClient.get<ApiResponse<DashboardMetrics>>('/dashboard/metrics'),
 };

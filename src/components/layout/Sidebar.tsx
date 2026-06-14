@@ -10,6 +10,7 @@ import {
   BellIcon,
   Cog6ToothIcon,
   BeakerIcon,
+  UsersIcon,
 } from '@heroicons/react/24/outline';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { selectUnreadCount } from '@/features/notifications/notificationsSlice';
@@ -28,6 +29,7 @@ const navItems = [
   { to: '/medications', icon: BeakerIcon, label: 'Medications' },
   { to: '/reports', icon: ChartBarIcon, label: 'Reports' },
   { to: '/notifications', icon: BellIcon, label: 'Notifications' },
+  { to: '/users', icon: UsersIcon, label: 'Users' },
   { to: '/settings', icon: Cog6ToothIcon, label: 'Settings' },
 ];
 

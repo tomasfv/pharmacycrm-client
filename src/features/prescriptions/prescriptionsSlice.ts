@@ -14,11 +14,11 @@ const initialState: PrescriptionsState = {
   error: null,
 };
 
-export const fetchPrescriptions = createAsyncThunk(
+export const fetchPrescriptions = createAsyncThunk<Prescription[], string | undefined>(
   'prescriptions/fetchPrescriptions',
-  async (patientId?: string, { rejectWithValue }) => {
+  async (patientId, { rejectWithValue }) => {
     try {
-      const { data } = await prescriptionsApi.getByPatientId(patientId || '');
+      const { data } = await prescriptionsApi.getByPatientId(patientId ?? '');
       return data.data as Prescription[];
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || 'Failed to fetch prescriptions');

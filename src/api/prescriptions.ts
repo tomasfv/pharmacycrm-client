@@ -1,12 +1,14 @@
 import apiClient from './client';
+import type { ApiResponse } from '@/types/common';
+import type { Prescription } from '@/types';
 
 export const prescriptionsApi = {
   getByPatientId: (patientId: string) =>
-    apiClient.get<any[]>('/prescriptions', { params: { patientId } }),
+    apiClient.get<ApiResponse<Prescription[]>>('/prescriptions', { params: { patientId } }),
   create: (data: Record<string, unknown>) =>
-    apiClient.post<any>('/prescriptions', data),
+    apiClient.post<ApiResponse<Prescription>>('/prescriptions', data),
   update: (id: string, data: Record<string, unknown>) =>
-    apiClient.put<any>(`/prescriptions/${id}`, data),
+    apiClient.put<ApiResponse<Prescription>>(`/prescriptions/${id}`, data),
   delete: (id: string) =>
     apiClient.delete(`/prescriptions/${id}`),
 };
