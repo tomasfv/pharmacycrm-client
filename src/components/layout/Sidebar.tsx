@@ -56,7 +56,7 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
           <div className="h-8 w-8 rounded-lg bg-primary-600 flex items-center justify-center">
             <span className="text-white font-bold text-sm">PC</span>
           </div>
-          <span className="font-semibold text-gray-900">PharmacyCRM</span>
+          <span className="font-semibold text-gray-900">PharmaCare CRM</span>
         </div>
 
         <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
