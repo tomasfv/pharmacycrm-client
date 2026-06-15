@@ -26,7 +26,6 @@ interface MedicationRow {
   medicationId: string;
   medicationName: string;
   quantity: string;
-  frequency: string;
 }
 
 const eventIcons: Record<ActivityEvent['type'], React.ElementType> = {
@@ -97,7 +96,6 @@ const emptyMedicationRow: MedicationRow = {
   medicationId: '',
   medicationName: '',
   quantity: '',
-  frequency: '',
 };
 
 export function PatientDetailPage() {
@@ -206,22 +204,22 @@ export function PatientDetailPage() {
   };
 
   const handleCreateRx = async () => {
-    const validMeds = rxMeds.filter((m) => m.medicationId && m.quantity && m.frequency);
+    const validMeds = rxMeds.filter((m) => m.medicationId && m.quantity);
     if (validMeds.length === 0) {
-      showSnackbar('Add at least one medication with quantity and frequency', 'error');
+      showSnackbar('Add at least one medication with quantity', 'error');
       return;
     }
     const medications: PrescriptionMedication[] = validMeds.map((m) => ({
       medicationId: m.medicationId,
       medicationName: m.medicationName,
       quantity: m.quantity,
-      frequency: m.frequency,
     }));
     try {
       await dispatch(addPrescription({
         patientId: patient.id,
         patientName: patient.name,
         medications,
+        notes: rxNotes.trim() || undefined,
         lastPickupDate: getLocalDateString(),
         nextPickupDate: getLocalDateDaysFromNow(30),
       })).unwrap();
@@ -349,7 +347,8 @@ export function PatientDetailPage() {
                     <th className="pb-3 pr-4 font-medium">Issue Date</th>
                     <th className="pb-3 pr-4 font-medium">Medications</th>
                     <th className="pb-3 pr-4 font-medium">Last Pickup</th>
-                    <th className="pb-3 font-medium">Next Pickup</th>
+                    <th className="pb-3 pr-4 font-medium">Next Pickup</th>
+                    <th className="pb-3 font-medium">Notes</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -361,13 +360,14 @@ export function PatientDetailPage() {
                           {rx.medications.map((med) => (
                             <div key={med.medicationId} className="text-gray-900">
                               <span className="font-medium">{med.medicationName}</span>
-                              <span className="text-gray-500 ml-2">{med.quantity} &middot; {med.frequency}</span>
+                              <span className="text-gray-500 ml-2">{med.quantity}</span>
                             </div>
                           ))}
                         </div>
                       </td>
                       <td className="py-3 pr-4 text-gray-600 whitespace-nowrap">{formatDate(rx.lastPickupDate)}</td>
-                      <td className="py-3 text-gray-600 whitespace-nowrap">{formatDate(rx.nextPickupDate)}</td>
+                      <td className="py-3 pr-4 text-gray-600 whitespace-nowrap">{formatDate(rx.nextPickupDate)}</td>
+                      <td className="py-3 text-gray-600 whitespace-nowrap text-sm">{rx.notes || <span className="text-gray-400">{'\u2014'}</span>}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -447,13 +447,7 @@ export function PatientDetailPage() {
                       onChange={(e) => handleMedicationChange(idx, 'quantity', e.target.value)}
                     />
                   </div>
-                  <div className="w-24">
-                    <Input
-                      placeholder="Freq"
-                      value={row.frequency}
-                      onChange={(e) => handleMedicationChange(idx, 'frequency', e.target.value)}
-                    />
-                  </div>
+
                   {rxMeds.length > 1 && (
                     <button
                       type="button"
