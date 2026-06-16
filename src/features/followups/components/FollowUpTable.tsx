@@ -44,7 +44,13 @@ function StatusDropdown({
     e.stopPropagation();
     if (!open && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
-      setMenuPos({ top: rect.bottom + 4, left: rect.left });
+      const estimatedHeight = 200;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      if (spaceBelow >= estimatedHeight) {
+        setMenuPos({ top: rect.bottom + 4, left: rect.left });
+      } else {
+        setMenuPos({ top: rect.top - estimatedHeight - 4, left: rect.left });
+      }
     }
     setOpen(!open);
   };

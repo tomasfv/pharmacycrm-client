@@ -4,7 +4,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchPrescriptions, addPrescription } from '@/features/prescriptions/prescriptionsSlice';
 import { fetchMedications, selectMedicationOptions, addMedication } from '@/features/medications/medicationsSlice';
 import { fetchFollowUps } from '@/features/followups/followupsSlice';
-import { Card, CardHeader, CardTitle, Badge, Button, Tabs, Dialog, Input, Select } from '@/components/ui';
+import { Card, CardHeader, CardTitle, Badge, Button, Tabs, Dialog, Input, DropdownSelect } from '@/components/ui';
 import { formatDate, statusLabels, statusColors, getLocalDateString, getLocalDateDaysFromNow } from '@/utils';
 import { ArrowLeftIcon, UserIcon, DocumentTextIcon, CubeIcon, ArrowPathIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useSnackbar } from '@/components/ui';
@@ -433,11 +433,11 @@ export function PatientDetailPage() {
               {rxMeds.map((row, idx) => (
                 <div key={idx} className="flex gap-2 items-start">
                   <div className="flex-1">
-                    <Select
+                    <DropdownSelect
                       options={medicationOptions}
                       placeholder="Select medication"
                       value={row.medicationId}
-                      onChange={(e) => handleMedicationChange(idx, 'medicationId', e.target.value)}
+                      onChange={(value) => handleMedicationChange(idx, 'medicationId', value)}
                     />
                   </div>
                   <div className="w-28">

@@ -3,6 +3,7 @@ export { Card, CardHeader, CardTitle, CardContent } from './Card';
 export { Badge } from './Badge';
 export { Input } from './Input';
 export { Select } from './Select';
+export { DropdownSelect } from './DropdownSelect';
 export { DataGrid } from './DataGrid';
 export { Dialog } from './Dialog';
 export { Tabs } from './Tabs';
