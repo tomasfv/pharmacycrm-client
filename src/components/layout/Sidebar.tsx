@@ -48,26 +48,27 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
       )}
       <aside
         className={cn(
-          "fixed lg:static inset-y-0 left-0 z-30 w-64 bg-white border-r border-gray-200 flex flex-col transition-transform duration-300",
+          "fixed lg:static inset-y-0 left-0 z-30 w-16 2xl:w-48 bg-white border-r border-gray-200 flex flex-col transition-transform duration-300",
           collapsed && "-translate-x-full lg:translate-x-0",
         )}
       >
-        <div className="h-16 flex items-center gap-3 px-6 border-b border-gray-200">
-          <div className="h-8 w-8 rounded-lg bg-primary-600 flex items-center justify-center">
+        <div className="h-16 flex items-center justify-center 2xl:justify-start gap-2 px-4 border-b border-gray-200">
+          <div className="h-8 w-8 rounded-lg bg-primary-600 flex items-center justify-center shrink-0">
             <span className="text-white font-bold text-sm">PC</span>
           </div>
-          <span className="font-semibold text-gray-900">PharmaCare CRM</span>
+          <span className="hidden 2xl:inline font-semibold text-gray-900">PharmaCare CRM</span>
         </div>
 
-        <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 py-4 px-2 2xl:px-3 space-y-1 overflow-y-auto">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
+              title={item.label}
               onClick={onClose}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                  "flex items-center justify-center 2xl:justify-start gap-3 px-0 2xl:px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                   isActive
                     ? "bg-primary-50 text-primary-700"
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
@@ -75,9 +76,9 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
               }
             >
               <item.icon className="h-5 w-5 shrink-0" />
-              <span>{item.label}</span>
+              <span className="hidden 2xl:inline">{item.label}</span>
               {item.to === "/notifications" && unreadCount > 0 && (
-                <span className="ml-auto bg-red-500 text-white text-xs rounded-full h-5 min-w-[20px] flex items-center justify-center px-1">
+                <span className="hidden 2xl:inline-flex ml-auto bg-red-500 text-white text-xs rounded-full h-5 min-w-[20px] items-center justify-center px-1">
                   {unreadCount}
                 </span>
               )}
@@ -85,16 +86,17 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
           ))}
         </nav>
 
-        <div className="p-3 border-t border-gray-200">
+        <div className="p-2 2xl:p-3 border-t border-gray-200">
           <button
+            title="Logout"
             onClick={() => {
               dispatch(logoutAction());
               navigate("/login");
             }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+            className="w-full flex items-center justify-center 2xl:justify-start gap-3 px-0 2xl:px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
           >
             <ArrowRightOnRectangleIcon className="h-5 w-5 shrink-0" />
-            <span>Logout</span>
+            <span className="hidden 2xl:inline">Logout</span>
           </button>
         </div>
       </aside>
