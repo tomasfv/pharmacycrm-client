@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, Badge } from '@/components/ui';
 import { useAppSelector } from '@/store/hooks';
 import { formatDate, statusLabels, statusColors } from '@/utils';
-import type { Prescription } from '@/types';
+import type { Order } from '@/types';
 
-function getLatestPrescription(list: Prescription[]): Prescription | null {
+function getLatestOrder(list: Order[]): Order | null {
   if (list.length === 0) return null;
   return list.reduce((a, b) => (a.createdAt > b.createdAt ? a : b));
 }
@@ -15,22 +15,22 @@ export function UpcomingFollowUps() {
   const followUps = useAppSelector((state) => state.followups.followUps)
     .filter((f) => f.status !== 'delivered')
     .slice(0, 5);
-  const prescriptions = useAppSelector((state) => state.prescriptions.prescriptions);
+  const orders = useAppSelector((state) => state.orders.orders);
 
-  const latestRxMap = useMemo(() => {
-    const grouped = new Map<string, Prescription[]>();
-    for (const rx of prescriptions) {
-      const arr = grouped.get(rx.patientId);
-      if (arr) arr.push(rx);
-      else grouped.set(rx.patientId, [rx]);
+  const latestOrderMap = useMemo(() => {
+    const grouped = new Map<string, Order[]>();
+    for (const order of orders) {
+      const arr = grouped.get(order.patientId);
+      if (arr) arr.push(order);
+      else grouped.set(order.patientId, [order]);
     }
-    const latest = new Map<string, Prescription>();
+    const latest = new Map<string, Order>();
     for (const [patientId, list] of grouped) {
-      const l = getLatestPrescription(list);
+      const l = getLatestOrder(list);
       if (l) latest.set(patientId, l);
     }
     return latest;
-  }, [prescriptions]);
+  }, [orders]);
 
   return (
     <Card>
@@ -49,8 +49,8 @@ export function UpcomingFollowUps() {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {followUps.map((fu) => {
-              const rx = latestRxMap.get(fu.patientId);
-              const medNames = rx ? rx.medications.map((m) => m.medicationName).join(', ') : fu.medication;
+              const order = latestOrderMap.get(fu.patientId);
+              const medNames = order ? order.medications.map((m) => m.medicationName).join(', ') : fu.medication;
               return (
                 <tr
                   key={fu.id}

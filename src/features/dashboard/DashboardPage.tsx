@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchDashboardMetrics } from './dashboardSlice';
 import { fetchFollowUps } from '@/features/followups/followupsSlice';
-import { fetchPrescriptions } from '@/features/prescriptions/prescriptionsSlice';
+import { fetchOrders } from '@/features/orders/ordersSlice';
 import { fetchContacts } from '@/features/contacts/contactsSlice';
 import { KPICard } from './KPICard';
 import { UpcomingFollowUps } from './UpcomingFollowUps';
@@ -24,7 +24,7 @@ export function DashboardPage() {
   useEffect(() => {
     dispatch(fetchDashboardMetrics());
     dispatch(fetchFollowUps());
-    dispatch(fetchPrescriptions());
+    dispatch(fetchOrders());
     dispatch(fetchContacts());
   }, [dispatch]);
 
@@ -43,8 +43,8 @@ export function DashboardPage() {
           variant="warning"
         />
         <KPICard
-          title="Pending Prescriptions"
-          value={metrics.pendingPrescriptions}
+          title="Pending Orders"
+          value={metrics.pendingOrders}
           icon={BeakerIcon}
           variant="default"
         />

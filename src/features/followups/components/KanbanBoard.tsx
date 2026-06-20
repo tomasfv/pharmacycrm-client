@@ -8,7 +8,7 @@ import type { FollowUp, FollowUpStatus } from '@/types';
 const columns: FollowUpStatus[] = [
   'pending_contact',
   'contacted',
-  'prescription_received',
+  'order_received',
   'prepared',
   'delivered',
 ];
@@ -16,7 +16,7 @@ const columns: FollowUpStatus[] = [
 const columnIcons: Record<FollowUpStatus, string> = {
   pending_contact: '\uD83D\uDD14',
   contacted: '\uD83D\uDCDE',
-  prescription_received: '\uD83D\uDCC4',
+  order_received: '\uD83D\uDCC4',
   prepared: '\uD83D\uDCE6',
   delivered: '\u2705',
 };
@@ -24,7 +24,7 @@ const columnIcons: Record<FollowUpStatus, string> = {
 export function KanbanBoard() {
   const dispatch = useAppDispatch();
   const followUps = useAppSelector((state) => state.followups.followUps);
-  const prescriptions = useAppSelector((state) => state.prescriptions.prescriptions);
+  const orders = useAppSelector((state) => state.orders.orders);
 
   const onDragEnd = (result: DropResult) => {
     if (!result.destination) return;
@@ -33,9 +33,9 @@ export function KanbanBoard() {
     dispatch(moveFollowUp({ followUpId, newStatus }));
   };
 
-  const MedicationPills = ({ prescriptionId }: { prescriptionId: string | null }) => {
-    const rx = prescriptionId
-      ? prescriptions.find((p) => p.id === prescriptionId)
+  const MedicationPills = ({ orderId }: { orderId: string | null }) => {
+    const rx = orderId
+      ? orders.find((o) => o.id === orderId)
       : null;
     if (!rx || rx.medications.length === 0) return null;
     const meds = rx.medications;
@@ -48,7 +48,7 @@ export function KanbanBoard() {
         content={
           <div>
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-              Prescription ({formatDate(rx.createdAt)})
+              Order ({formatDate(rx.createdAt)})
             </p>
             <ul className="space-y-1">
               {meds.map((m) => (
@@ -122,7 +122,7 @@ export function KanbanBoard() {
                             <p className="text-sm font-medium text-gray-900">
                               {followUp.patientName}
                             </p>
-                            <MedicationPills prescriptionId={followUp.prescriptionId} />
+                            <MedicationPills orderId={followUp.orderId} />
                             <div className="flex items-center justify-between mt-2">
                               <span className="text-xs text-gray-400">
                                 {formatDate(followUp.scheduledDate)}

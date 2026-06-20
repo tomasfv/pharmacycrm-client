@@ -9,7 +9,7 @@ interface DashboardState {
 const initialState: DashboardState = {
   metrics: {
     patientsToContactToday: 0,
-    pendingPrescriptions: 0,
+    pendingOrders: 0,
     readyForPickup: 0,
     overduePatients: 0,
   },

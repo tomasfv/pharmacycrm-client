@@ -3,7 +3,7 @@ import type { ApiResponse } from '@/types/common';
 
 export interface DashboardMetrics {
   patientsToContactToday: number;
-  pendingPrescriptions: number;
+  pendingOrders: number;
   readyForPickup: number;
   overduePatients: number;
 }

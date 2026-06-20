@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setViewMode, fetchFollowUps } from './followupsSlice';
-import { fetchPrescriptions } from '@/features/prescriptions/prescriptionsSlice';
+import { fetchOrders } from '@/features/orders/ordersSlice';
 import { fetchPatients } from '@/features/patients/patientsSlice';
 import { KanbanBoard } from './components/KanbanBoard';
 import { FollowUpTable } from './components/FollowUpTable';
@@ -14,7 +14,7 @@ export function FollowUpsPage() {
 
   useEffect(() => {
     dispatch(fetchFollowUps());
-    dispatch(fetchPrescriptions());
+    dispatch(fetchOrders());
     dispatch(fetchPatients());
   }, [dispatch]);
 

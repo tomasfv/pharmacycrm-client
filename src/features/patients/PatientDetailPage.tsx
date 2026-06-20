@@ -1,22 +1,22 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { fetchPrescriptions, addPrescription } from '@/features/prescriptions/prescriptionsSlice';
+import { fetchOrders, addOrder } from '@/features/orders/ordersSlice';
 import { fetchMedications, selectMedicationOptions, addMedication } from '@/features/medications/medicationsSlice';
 import { fetchFollowUps } from '@/features/followups/followupsSlice';
 import { Card, CardHeader, CardTitle, Badge, Button, Tabs, Dialog, Input, DropdownSelect } from '@/components/ui';
 import { formatDate, statusLabels, statusColors, getLocalDateString, getLocalDateDaysFromNow } from '@/utils';
 import { ArrowLeftIcon, UserIcon, DocumentTextIcon, CubeIcon, ArrowPathIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useSnackbar } from '@/components/ui';
-import type { Prescription, PrescriptionMedication, FollowUpStatus } from '@/types';
+import type { Order, OrderMedication, FollowUpStatus } from '@/types';
 
-type TabId = 'info' | 'prescriptions' | 'history';
+type TabId = 'info' | 'orders' | 'history';
 
 interface ActivityEvent {
   id: string;
   date: string;
   sortDate: string;
-  type: 'patient_created' | 'prescription_issued' | 'prescription_pickup' | 'follow_up';
+  type: 'patient_created' | 'order_issued' | 'order_pickup' | 'follow_up';
   description: string;
   details?: string;
   status?: string;
@@ -30,21 +30,21 @@ interface MedicationRow {
 
 const eventIcons: Record<ActivityEvent['type'], React.ElementType> = {
   patient_created: UserIcon,
-  prescription_issued: DocumentTextIcon,
-  prescription_pickup: CubeIcon,
+  order_issued: DocumentTextIcon,
+  order_pickup: CubeIcon,
   follow_up: ArrowPathIcon,
 };
 
 const eventColors: Record<ActivityEvent['type'], string> = {
   patient_created: 'bg-green-100 text-green-600',
-  prescription_issued: 'bg-blue-100 text-blue-600',
-  prescription_pickup: 'bg-amber-100 text-amber-600',
+  order_issued: 'bg-blue-100 text-blue-600',
+  order_pickup: 'bg-amber-100 text-amber-600',
   follow_up: 'bg-purple-100 text-purple-600',
 };
 
 function buildTimeline(
   patient: { id: string; createdAt: string; name: string },
-  prescriptions: Prescription[],
+  orders: Order[],
   followUps: { id: string; scheduledDate: string; status: FollowUpStatus; notes?: string; createdAt: string }[],
 ): ActivityEvent[] {
   const events: ActivityEvent[] = [];
@@ -57,21 +57,21 @@ function buildTimeline(
     description: 'Patient registered in the system',
   });
 
-  for (const rx of prescriptions) {
+  for (const rx of orders) {
     const names = rx.medications.map((m) => m.medicationName).join(', ');
     events.push({
       id: `evt-rx-issued-${rx.id}`,
       date: rx.createdAt,
       sortDate: rx.createdAt,
-      type: 'prescription_issued',
-      description: `Prescription issued: ${names}`,
+      type: 'order_issued',
+      description: `Order issued: ${names}`,
     });
     events.push({
       id: `evt-rx-pickup-${rx.id}`,
       date: rx.lastPickupDate,
       sortDate: rx.createdAt,
-      type: 'prescription_pickup',
-      description: `Prescription picked up: ${names}`,
+      type: 'order_pickup',
+      description: `Order picked up: ${names}`,
     });
   }
 
@@ -106,12 +106,12 @@ export function PatientDetailPage() {
   const patient = useAppSelector((state) =>
     state.patients.patients.find((p) => p.id === id),
   );
-  const prescriptions = useAppSelector((state) => state.prescriptions.prescriptions);
+  const orders = useAppSelector((state) => state.orders.orders);
   const medicationOptions = useAppSelector(selectMedicationOptions);
 
   useEffect(() => {
     dispatch(fetchMedications());
-    dispatch(fetchPrescriptions(id));
+    dispatch(fetchOrders(id));
     dispatch(fetchFollowUps());
   }, [dispatch, id]);
   const [activeTab, setActiveTab] = useState<TabId>('info');
@@ -124,9 +124,9 @@ export function PatientDetailPage() {
   const [medDrug, setMedDrug] = useState('');
   const [medLab, setMedLab] = useState('');
 
-  const patientPrescriptions = useMemo(
-    () => prescriptions.filter((p) => p.patientId === id),
-    [id, prescriptions],
+  const patientOrders = useMemo(
+    () => orders.filter((p) => p.patientId === id),
+    [id, orders],
   );
 
   const allFollowUps = useAppSelector((state) => state.followups.followUps);
@@ -136,8 +136,8 @@ export function PatientDetailPage() {
   );
 
   const timeline = useMemo(
-    () => (patient ? buildTimeline(patient, patientPrescriptions, patientFollowUps) : []),
-    [patient, patientPrescriptions, patientFollowUps],
+    () => (patient ? buildTimeline(patient, patientOrders, patientFollowUps) : []),
+    [patient, patientOrders, patientFollowUps],
   );
 
   if (!patient) {
@@ -153,7 +153,7 @@ export function PatientDetailPage() {
 
   const tabs = [
     { id: 'info', label: 'Personal Information' },
-    { id: 'prescriptions', label: 'Prescriptions', count: patientPrescriptions.length },
+    { id: 'orders', label: 'Orders', count: patientOrders.length },
     { id: 'history', label: 'Activity', count: timeline.length },
   ];
 
@@ -209,13 +209,13 @@ export function PatientDetailPage() {
       showSnackbar('Add at least one medication with quantity', 'error');
       return;
     }
-    const medications: PrescriptionMedication[] = validMeds.map((m) => ({
+    const medications: OrderMedication[] = validMeds.map((m) => ({
       medicationId: m.medicationId,
       medicationName: m.medicationName,
       quantity: m.quantity,
     }));
     try {
-      await dispatch(addPrescription({
+      await dispatch(addOrder({
         patientId: patient.id,
         patientName: patient.name,
         medications,
@@ -227,9 +227,9 @@ export function PatientDetailPage() {
       setShowRxForm(false);
       setRxMeds([{ ...emptyMedicationRow }]);
       setRxNotes('');
-      showSnackbar('Prescription created successfully', 'success');
+      showSnackbar('Order created successfully', 'success');
     } catch {
-      showSnackbar('Failed to create prescription', 'error');
+      showSnackbar('Failed to create order', 'error');
     }
   };
 
@@ -267,6 +267,14 @@ export function PatientDetailPage() {
               <div className="flex justify-between">
                 <dt className="text-sm text-gray-500">Phone</dt>
                 <dd className="text-sm font-medium text-gray-900">{patient.phone}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-sm text-gray-500">National ID</dt>
+                <dd className="text-sm font-medium text-gray-900">{patient.dni || '\u2014'}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-sm text-gray-500">Address</dt>
+                <dd className="text-sm font-medium text-gray-900">{patient.address || '\u2014'}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-sm text-gray-500">Email</dt>
@@ -322,10 +330,10 @@ export function PatientDetailPage() {
         </div>
       )}
 
-      {activeTab === 'prescriptions' && (
+      {activeTab === 'orders' && (
         <Card>
           <CardHeader className="flex items-center justify-between">
-            <CardTitle>Prescriptions ({patientPrescriptions.length})</CardTitle>
+            <CardTitle>Orders ({patientOrders.length})</CardTitle>
             <div className="flex gap-2">
               <Button size="sm" variant="secondary" onClick={() => setShowMedForm(true)}>
                 <PlusIcon className="h-4 w-4" />
@@ -333,12 +341,12 @@ export function PatientDetailPage() {
               </Button>
               <Button size="sm" onClick={() => setShowRxForm(true)}>
                 <PlusIcon className="h-4 w-4" />
-                New Prescription
+                New Order
               </Button>
             </div>
           </CardHeader>
-          {patientPrescriptions.length === 0 ? (
-            <p className="text-sm text-gray-500">No prescriptions registered.</p>
+          {patientOrders.length === 0 ? (
+            <p className="text-sm text-gray-500">No orders registered.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -352,7 +360,7 @@ export function PatientDetailPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {patientPrescriptions.map((rx) => (
+                  {patientOrders.map((rx) => (
                     <tr key={rx.id}>
                       <td className="py-3 pr-4 text-gray-600 whitespace-nowrap">{formatDate(rx.createdAt)}</td>
                       <td className="py-3 pr-4">
@@ -423,7 +431,7 @@ export function PatientDetailPage() {
       <Dialog
         open={showRxForm}
         onClose={() => { setShowRxForm(false); setRxMeds([{ ...emptyMedicationRow }]); setRxNotes(''); }}
-        title="New Prescription"
+        title="New Order"
         size="lg"
       >
         <div className="space-y-4">
@@ -473,7 +481,7 @@ export function PatientDetailPage() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
             <Input
-              placeholder="Optional notes for this prescription"
+              placeholder="Optional notes for this order"
               value={rxNotes}
               onChange={(e) => setRxNotes(e.target.value)}
             />
@@ -488,7 +496,7 @@ export function PatientDetailPage() {
             Cancel
           </Button>
           <Button onClick={handleCreateRx}>
-            Create Prescription
+            Create Order
           </Button>
         </div>
       </Dialog>

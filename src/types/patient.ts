@@ -10,6 +10,7 @@ export interface Patient {
   memberNumber: string;
   status: PatientStatus;
   nextFollowUpDate: string;
+  address?: string;
   notes?: string;
   createdAt: string;
   updatedAt: string;

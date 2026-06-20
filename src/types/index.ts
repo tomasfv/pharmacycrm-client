@@ -1,6 +1,6 @@
 export * from './common';
 export * from './patient';
-export * from './prescription';
+export * from './order';
 export * from './medication';
 export * from './followup';
 export * from './contact';

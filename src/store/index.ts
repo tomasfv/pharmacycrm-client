@@ -2,7 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import authReducer from '@/features/auth/authSlice';
 import dashboardReducer from '@/features/dashboard/dashboardSlice';
 import patientsReducer from '@/features/patients/patientsSlice';
-import prescriptionsReducer from '@/features/prescriptions/prescriptionsSlice';
+import ordersReducer from '@/features/orders/ordersSlice';
 import followupsReducer from '@/features/followups/followupsSlice';
 import contactsReducer from '@/features/contacts/contactsSlice';
 import reportsReducer from '@/features/reports/reportsSlice';
@@ -16,7 +16,7 @@ export const store = configureStore({
     auth: authReducer,
     dashboard: dashboardReducer,
     patients: patientsReducer,
-    prescriptions: prescriptionsReducer,
+    orders: ordersReducer,
     followups: followupsReducer,
     contacts: contactsReducer,
     reports: reportsReducer,

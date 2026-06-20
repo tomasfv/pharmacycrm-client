@@ -1,7 +1,7 @@
 export type FollowUpStatus =
   | 'pending_contact'
   | 'contacted'
-  | 'prescription_received'
+  | 'order_received'
   | 'prepared'
   | 'delivered';
 

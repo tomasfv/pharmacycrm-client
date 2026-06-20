@@ -23,6 +23,7 @@ interface PatientForm {
   dni: string;
   phone: string;
   email: string;
+  address: string;
   healthInsurance: string;
   memberNumber: string;
   notes: string;
@@ -34,6 +35,7 @@ const emptyForm: PatientForm = {
   dni: '',
   phone: '',
   email: '',
+  address: '',
   healthInsurance: '',
   memberNumber: '',
   notes: '',
@@ -73,6 +75,7 @@ export function PatientsListPage() {
       dni: patient.dni,
       phone: patient.phone,
       email: patient.email,
+      address: patient.address || '',
       healthInsurance: patient.healthInsurance,
       memberNumber: patient.memberNumber,
       notes: patient.notes || '',
@@ -122,6 +125,7 @@ export function PatientsListPage() {
         dni: form.dni.trim(),
         phone: form.phone.trim(),
         email: form.email.trim(),
+        address: form.address.trim() || undefined,
         healthInsurance: form.healthInsurance.trim() || 'N/A',
         memberNumber: form.memberNumber.trim() || 'N/A',
         notes: form.notes.trim() || undefined,
@@ -330,6 +334,14 @@ export function PatientsListPage() {
               onChange={(e) => updateForm('email', e.target.value)}
             />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+            <Input
+              placeholder="e.g. Av. Corrientes 1234"
+              value={form.address}
+              onChange={(e) => updateForm('address', e.target.value)}
+            />
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Health Insurance</label>
@@ -416,6 +428,14 @@ export function PatientsListPage() {
               type="email"
               value={form.email}
               onChange={(e) => updateForm('email', e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+            <Input
+              placeholder="e.g. Av. Corrientes 1234"
+              value={form.address}
+              onChange={(e) => updateForm('address', e.target.value)}
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

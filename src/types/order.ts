@@ -1,15 +1,15 @@
-export interface PrescriptionMedication {
+export interface OrderMedication {
   medicationId: string;
   medicationName: string;
   quantity: string;
   frequency?: string;
 }
 
-export interface Prescription {
+export interface Order {
   id: string;
   patientId: string;
   patientName: string;
-  medications: PrescriptionMedication[];
+  medications: OrderMedication[];
   lastPickupDate: string;
   nextPickupDate: string;
   notes?: string;

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchPatients } from '@/features/patients/patientsSlice';
-import { fetchPrescriptions } from '@/features/prescriptions/prescriptionsSlice';
+import { fetchOrders } from '@/features/orders/ordersSlice';
 import { fetchFollowUps } from '@/features/followups/followupsSlice';
 import { selectReportsData } from './reportsSlice';
 import { Card, CardHeader, CardTitle } from '@/components/ui';
@@ -45,7 +45,7 @@ export function ReportsPage() {
 
   useEffect(() => {
     dispatch(fetchPatients());
-    dispatch(fetchPrescriptions());
+    dispatch(fetchOrders());
     dispatch(fetchFollowUps());
   }, [dispatch]);
 
@@ -58,7 +58,7 @@ export function ReportsPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Active Patients" value={data.activePatients} icon={UserGroupIcon} color="bg-primary-600" />
-        <StatCard title="Active Prescriptions" value={data.activePrescriptions} icon={BeakerIcon} color="bg-blue-600" />
+        <StatCard title="Active Orders" value={data.activeOrders} icon={BeakerIcon} color="bg-blue-600" />
         <StatCard title="Overdue Patients" value={data.overduePatients} icon={ExclamationTriangleIcon} color="bg-red-600" />
         <StatCard title="Monthly Follow-Ups" value={data.monthlyFollowUps.reduce((a, b) => a + b.count, 0)} icon={CalendarDaysIcon} color="bg-purple-600" />
       </div>

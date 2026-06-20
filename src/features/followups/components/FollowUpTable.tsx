@@ -10,7 +10,7 @@ import { MagnifyingGlassIcon, ChevronDownIcon } from '@heroicons/react/24/outlin
 const statusOptions: { value: FollowUpStatus; label: string }[] = [
   { value: 'pending_contact', label: 'Pending Contact' },
   { value: 'contacted', label: 'Contacted' },
-  { value: 'prescription_received', label: 'Prescription Received' },
+  { value: 'order_received', label: 'Order Received' },
   { value: 'prepared', label: 'Prepared' },
   { value: 'delivered', label: 'Delivered' },
 ];
@@ -104,7 +104,7 @@ function StatusDropdown({
 export function FollowUpTable() {
   const dispatch = useAppDispatch();
   const followUps = useAppSelector((state) => state.followups.followUps);
-  const prescriptions = useAppSelector((state) => state.prescriptions.prescriptions);
+  const orders = useAppSelector((state) => state.orders.orders);
   const patients = useAppSelector((state) => state.patients.patients);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -142,8 +142,8 @@ export function FollowUpTable() {
   };
 
   const getPickupDates = (f: FollowUp) => {
-    const rx = f.prescriptionId
-      ? prescriptions.find((p) => p.id === f.prescriptionId)
+    const rx = f.orderId
+      ? orders.find((o) => o.id === f.orderId)
       : null;
     return {
       lastPickup: rx ? formatDate(rx.lastPickupDate) : '\u2014',
@@ -211,8 +211,8 @@ export function FollowUpTable() {
       key: 'medications',
       header: 'MEDICATION',
       render: (f: FollowUp) => {
-        const rx = f.prescriptionId
-          ? prescriptions.find((p) => p.id === f.prescriptionId)
+        const rx = f.orderId
+          ? orders.find((o) => o.id === f.orderId)
           : null;
         if (!rx || rx.medications.length === 0) return '\u2014';
         const meds = rx.medications;
@@ -224,7 +224,7 @@ export function FollowUpTable() {
             content={
               <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                  Prescription ({formatDate(rx.createdAt)})
+                  Order ({formatDate(rx.createdAt)})
                 </p>
                 <ul className="space-y-1">
                   {meds.map((m) => (

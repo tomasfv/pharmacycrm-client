@@ -3,7 +3,7 @@ import type { FollowUpStatus } from '@/types';
 
 interface ReportsData {
   activePatients: number;
-  activePrescriptions: number;
+  activeOrders: number;
   overduePatients: number;
   monthlyFollowUps: { month: string; count: number }[];
   statusDistribution: { status: FollowUpStatus; count: number }[];
@@ -13,12 +13,12 @@ const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 export const selectReportsData = (state: any): ReportsData => {
   const patients = state.patients?.patients || [];
-  const prescriptions = state.prescriptions?.prescriptions || [];
+  const orders = state.orders?.orders || [];
   const followUps = state.followups?.followUps || [];
   const today = getLocalDateString();
 
   const activePatients = patients.filter((p: any) => p.status === 'active').length;
-  const activePrescriptions = prescriptions.length;
+  const activeOrders = orders.length;
   const overduePatients = followUps.filter(
     (f: any) => f.scheduledDate < today && f.status !== 'delivered',
   ).length;
@@ -33,14 +33,14 @@ export const selectReportsData = (state: any): ReportsData => {
   });
 
   const statuses: FollowUpStatus[] = [
-    'pending_contact', 'contacted', 'prescription_received', 'prepared', 'delivered',
+    'pending_contact', 'contacted', 'order_received', 'prepared', 'delivered',
   ];
   const statusDistribution = statuses.map((status) => ({
     status,
     count: followUps.filter((f: any) => f.status === status).length,
   }));
 
-  return { activePatients, activePrescriptions, overduePatients, monthlyFollowUps, statusDistribution };
+  return { activePatients, activeOrders, overduePatients, monthlyFollowUps, statusDistribution };
 };
 
 const reportsSlice: any = {

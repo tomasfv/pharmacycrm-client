@@ -11,7 +11,7 @@ interface FollowUpsState {
 const columns: FollowUpStatus[] = [
   'pending_contact',
   'contacted',
-  'prescription_received',
+  'order_received',
   'prepared',
   'delivered',
 ];
