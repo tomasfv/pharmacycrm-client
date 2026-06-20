@@ -1,12 +1,12 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { fetchOrders, addOrder } from '@/features/orders/ordersSlice';
+import { fetchOrders, addOrder, updateOrder } from '@/features/orders/ordersSlice';
 import { fetchMedications, selectMedicationOptions, addMedication } from '@/features/medications/medicationsSlice';
 import { fetchFollowUps } from '@/features/followups/followupsSlice';
 import { Card, CardHeader, CardTitle, Badge, Button, Tabs, Dialog, Input, DropdownSelect } from '@/components/ui';
 import { formatDate, statusLabels, statusColors, getLocalDateString, getLocalDateDaysFromNow } from '@/utils';
-import { ArrowLeftIcon, UserIcon, DocumentTextIcon, CubeIcon, ArrowPathIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, UserIcon, DocumentTextIcon, CubeIcon, ArrowPathIcon, PlusIcon, XMarkIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
 import { useSnackbar } from '@/components/ui';
 import type { Order, OrderMedication, FollowUpStatus } from '@/types';
 
@@ -118,6 +118,7 @@ export function PatientDetailPage() {
   const [showRxForm, setShowRxForm] = useState(false);
   const [rxMeds, setRxMeds] = useState<MedicationRow[]>([{ ...emptyMedicationRow }]);
   const [rxNotes, setRxNotes] = useState('');
+  const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [showMedForm, setShowMedForm] = useState(false);
   const [medName, setMedName] = useState('');
 
@@ -194,6 +195,17 @@ export function PatientDetailPage() {
     }
   };
 
+  const handleEditRx = (order: Order) => {
+    setEditingOrderId(order.id);
+    setRxMeds(order.medications.map((m) => ({
+      medicationId: m.medicationId,
+      medicationName: m.medicationName,
+      quantity: m.quantity,
+    })));
+    setRxNotes(order.notes || '');
+    setShowRxForm(true);
+  };
+
   const handleCreateRx = async () => {
     const validMeds = rxMeds.filter((m) => m.medicationId && m.quantity);
     if (validMeds.length === 0) {
@@ -206,21 +218,30 @@ export function PatientDetailPage() {
       quantity: m.quantity,
     }));
     try {
-      await dispatch(addOrder({
-        patientId: patient.id,
-        patientName: patient.name,
-        medications,
-        notes: rxNotes.trim() || undefined,
-        lastPickupDate: getLocalDateString(),
-        nextPickupDate: getLocalDateDaysFromNow(30),
-      })).unwrap();
-      dispatch(fetchFollowUps());
+      if (editingOrderId) {
+        await dispatch(updateOrder({
+          id: editingOrderId,
+          data: { medications, notes: rxNotes.trim() || undefined },
+        })).unwrap();
+        setEditingOrderId(null);
+        showSnackbar('Order updated successfully', 'success');
+      } else {
+        await dispatch(addOrder({
+          patientId: patient.id,
+          patientName: patient.name,
+          medications,
+          notes: rxNotes.trim() || undefined,
+          lastPickupDate: getLocalDateString(),
+          nextPickupDate: getLocalDateDaysFromNow(30),
+        })).unwrap();
+        dispatch(fetchFollowUps());
+        showSnackbar('Order created successfully', 'success');
+      }
       setShowRxForm(false);
       setRxMeds([{ ...emptyMedicationRow }]);
       setRxNotes('');
-      showSnackbar('Order created successfully', 'success');
     } catch {
-      showSnackbar('Failed to create order', 'error');
+      showSnackbar(editingOrderId ? 'Failed to update order' : 'Failed to create order', 'error');
     }
   };
 
@@ -347,7 +368,8 @@ export function PatientDetailPage() {
                     <th className="pb-3 pr-4 font-medium">Medications</th>
                     <th className="pb-3 pr-4 font-medium">Last Pickup</th>
                     <th className="pb-3 pr-4 font-medium">Next Pickup</th>
-                    <th className="pb-3 font-medium">Notes</th>
+                    <th className="pb-3 pr-4 font-medium">Notes</th>
+                    <th className="pb-3 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -366,7 +388,12 @@ export function PatientDetailPage() {
                       </td>
                       <td className="py-3 pr-4 text-gray-600 whitespace-nowrap">{formatDate(rx.lastPickupDate)}</td>
                       <td className="py-3 pr-4 text-gray-600 whitespace-nowrap">{formatDate(rx.nextPickupDate)}</td>
-                      <td className="py-3 text-gray-600 whitespace-nowrap text-sm">{rx.notes || <span className="text-gray-400">{'\u2014'}</span>}</td>
+                      <td className="py-3 pr-4 text-gray-600 whitespace-nowrap text-sm">{rx.notes || <span className="text-gray-400">{'\u2014'}</span>}</td>
+                      <td className="py-3">
+                        <button onClick={() => handleEditRx(rx)} className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
+                          <PencilSquareIcon className="h-4 w-4" />
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -421,8 +448,8 @@ export function PatientDetailPage() {
 
       <Dialog
         open={showRxForm}
-        onClose={() => { setShowRxForm(false); setRxMeds([{ ...emptyMedicationRow }]); setRxNotes(''); }}
-        title="New Order"
+        onClose={() => { setShowRxForm(false); setEditingOrderId(null); setRxMeds([{ ...emptyMedicationRow }]); setRxNotes(''); }}
+        title={editingOrderId ? 'Edit Order' : 'New Order'}
         size="lg"
       >
         <div className="space-y-4">
@@ -482,12 +509,12 @@ export function PatientDetailPage() {
         <div className="flex justify-end gap-3 mt-6">
           <Button
             variant="secondary"
-            onClick={() => { setShowRxForm(false); setRxMeds([{ ...emptyMedicationRow }]); setRxNotes(''); }}
+            onClick={() => { setShowRxForm(false); setEditingOrderId(null); setRxMeds([{ ...emptyMedicationRow }]); setRxNotes(''); }}
           >
             Cancel
           </Button>
           <Button onClick={handleCreateRx}>
-            Create Order
+            {editingOrderId ? 'Save Changes' : 'Create Order'}
           </Button>
         </div>
       </Dialog>

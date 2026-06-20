@@ -38,6 +38,18 @@ export const addOrder = createAsyncThunk(
   },
 );
 
+export const updateOrder = createAsyncThunk(
+  'orders/updateOrder',
+  async ({ id, data: orderData }: { id: string; data: Partial<Order> }, { rejectWithValue }) => {
+    try {
+      const { data } = await ordersApi.update(id, orderData as Record<string, unknown>);
+      return data.data as Order;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || 'Failed to update order');
+    }
+  },
+);
+
 const ordersSlice = createSlice({
   name: 'orders',
   initialState,
@@ -47,7 +59,11 @@ const ordersSlice = createSlice({
       .addCase(fetchOrders.pending, (state) => { state.loading = true; state.error = null; })
       .addCase(fetchOrders.fulfilled, (state, action) => { state.loading = false; state.orders = action.payload; })
       .addCase(fetchOrders.rejected, (state, action) => { state.loading = false; state.error = action.payload as string; })
-      .addCase(addOrder.fulfilled, (state, action) => { state.orders.unshift(action.payload); });
+      .addCase(addOrder.fulfilled, (state, action) => { state.orders.unshift(action.payload); })
+      .addCase(updateOrder.fulfilled, (state, action) => {
+        const idx = state.orders.findIndex((o) => o.id === action.payload.id);
+        if (idx >= 0) state.orders[idx] = action.payload;
+      });
   },
 });
 
