@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { moveFollowUp } from '../followupsSlice';
 import { DataGrid, Input, Tooltip } from '@/components/ui';
@@ -158,7 +159,7 @@ export function FollowUpTable() {
       sortable: true,
       render: (f: FollowUp) => {
         const patient = patientMap.get(f.patientId);
-        return <span className="font-medium text-gray-900">{patient?.name || f.patientName}</span>;
+        return <Link to={`/patients/${f.patientId}`} className="font-medium text-gray-900 hover:text-primary-600 transition-colors">{patient?.name || f.patientName}</Link>;
       },
     },
     {

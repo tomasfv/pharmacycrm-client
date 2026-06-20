@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, Badge } from '@/components/ui';
 import { useAppSelector } from '@/store/hooks';
 import { formatDate, statusLabels, statusColors } from '@/utils';
@@ -57,7 +57,7 @@ export function UpcomingFollowUps() {
                   className="cursor-pointer hover:bg-gray-50 transition-colors"
                   onClick={() => navigate('/followups')}
                 >
-                  <td className="py-2.5 pr-3 font-medium text-gray-900">{fu.patientName}</td>
+                  <td className="py-2.5 pr-3 font-medium text-gray-900"><Link to={`/patients/${fu.patientId}`} className="hover:text-primary-600 transition-colors" onClick={(e) => e.stopPropagation()}>{fu.patientName}</Link></td>
                   <td className="py-2.5 pr-3 text-gray-600 max-w-[200px] truncate" title={medNames}>{medNames}</td>
                   <td className="py-2.5 pr-3 text-gray-600">{formatDate(fu.scheduledDate)}</td>
                   <td className="py-2.5">

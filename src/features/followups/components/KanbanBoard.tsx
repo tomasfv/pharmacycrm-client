@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { moveFollowUp } from '../followupsSlice';
@@ -119,9 +120,9 @@ export function KanbanBoard() {
                               snapshot.isDragging ? 'shadow-lg rotate-2' : ''
                             }`}
                           >
-                            <p className="text-sm font-medium text-gray-900">
+                            <Link to={`/patients/${followUp.patientId}`} className="text-sm font-medium text-gray-900 hover:text-primary-600 transition-colors block">
                               {followUp.patientName}
-                            </p>
+                            </Link>
                             <MedicationPills orderId={followUp.orderId} />
                             <div className="flex items-center justify-between mt-2">
                               <span className="text-xs text-gray-400">
