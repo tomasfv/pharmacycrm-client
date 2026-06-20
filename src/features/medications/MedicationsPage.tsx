@@ -23,14 +23,9 @@ export function MedicationsPage() {
   const [editing, setEditing] = useState<Medication | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [name, setName] = useState('');
-  const [brand, setBrand] = useState('');
-  const [drug, setDrug] = useState('');
-  const [laboratory, setLaboratory] = useState('');
 
   const filtered = medications.filter((m) =>
-    [m.name, m.brand, m.drug, m.laboratory].some((f) =>
-      f.toLowerCase().includes(search.toLowerCase()),
-    ),
+    m.name.toLowerCase().includes(search.toLowerCase()),
   );
   const totalPages = Math.ceil(filtered.length / perPage);
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
@@ -38,9 +33,6 @@ export function MedicationsPage() {
   const resetForm = () => {
     setEditing(null);
     setName('');
-    setBrand('');
-    setDrug('');
-    setLaboratory('');
   };
 
   const openCreate = () => {
@@ -51,9 +43,6 @@ export function MedicationsPage() {
   const openEdit = (med: Medication) => {
     setEditing(med);
     setName(med.name);
-    setBrand(med.brand);
-    setDrug(med.drug);
-    setLaboratory(med.laboratory);
     setShowForm(true);
   };
 
@@ -67,17 +56,11 @@ export function MedicationsPage() {
         await dispatch(updateMedication({
           ...editing,
           name: name.trim(),
-          brand: brand.trim(),
-          drug: drug.trim(),
-          laboratory: laboratory.trim(),
         })).unwrap();
         showSnackbar('Medication updated successfully', 'success');
       } else {
         await dispatch(addMedication({
           name: name.trim(),
-          brand: brand.trim(),
-          drug: drug.trim(),
-          laboratory: laboratory.trim(),
         })).unwrap();
         showSnackbar('Medication created successfully', 'success');
       }
@@ -107,21 +90,6 @@ export function MedicationsPage() {
       header: 'NAME',
       sortable: true,
       render: (m: Medication) => <span className="font-medium text-gray-900">{m.name}</span>,
-    },
-    {
-      key: 'brand',
-      header: 'BRAND',
-      render: (m: Medication) => m.brand,
-    },
-    {
-      key: 'drug',
-      header: 'DRUG',
-      render: (m: Medication) => <span className="text-gray-600">{m.drug}</span>,
-    },
-    {
-      key: 'laboratory',
-      header: 'LABORATORY',
-      render: (m: Medication) => <span className="text-gray-600">{m.laboratory}</span>,
     },
     {
       key: 'createdAt',
@@ -167,7 +135,7 @@ export function MedicationsPage() {
         <div className="relative mb-4">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="Search by name, brand, drug or laboratory..."
+            placeholder="Search by name..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             className="pl-9"
@@ -198,30 +166,6 @@ export function MedicationsPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoFocus
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Brand</label>
-            <Input
-              placeholder="e.g. Glucophage"
-              value={brand}
-              onChange={(e) => setBrand(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Drug</label>
-            <Input
-              placeholder="e.g. Metformina"
-              value={drug}
-              onChange={(e) => setDrug(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Laboratory</label>
-            <Input
-              placeholder="e.g. Merck"
-              value={laboratory}
-              onChange={(e) => setLaboratory(e.target.value)}
             />
           </div>
         </div>

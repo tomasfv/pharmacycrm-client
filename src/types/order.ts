@@ -2,7 +2,6 @@ export interface OrderMedication {
   medicationId: string;
   medicationName: string;
   quantity: string;
-  frequency?: string;
 }
 
 export interface Order {

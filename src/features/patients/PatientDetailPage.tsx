@@ -120,9 +120,6 @@ export function PatientDetailPage() {
   const [rxNotes, setRxNotes] = useState('');
   const [showMedForm, setShowMedForm] = useState(false);
   const [medName, setMedName] = useState('');
-  const [medBrand, setMedBrand] = useState('');
-  const [medDrug, setMedDrug] = useState('');
-  const [medLab, setMedLab] = useState('');
 
   const patientOrders = useMemo(
     () => orders.filter((p) => p.patientId === id),
@@ -178,9 +175,6 @@ export function PatientDetailPage() {
 
   const resetMedForm = () => {
     setMedName('');
-    setMedBrand('');
-    setMedDrug('');
-    setMedLab('');
   };
 
   const handleCreateMedication = async () => {
@@ -191,9 +185,6 @@ export function PatientDetailPage() {
     try {
       await dispatch(addMedication({
         name: medName.trim(),
-        brand: medBrand.trim(),
-        drug: medDrug.trim(),
-        laboratory: medLab.trim(),
       })).unwrap();
       setShowMedForm(false);
       resetMedForm();
@@ -515,30 +506,6 @@ export function PatientDetailPage() {
               value={medName}
               onChange={(e) => setMedName(e.target.value)}
               autoFocus
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Brand</label>
-            <Input
-              placeholder="e.g. Glucophage"
-              value={medBrand}
-              onChange={(e) => setMedBrand(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Drug</label>
-            <Input
-              placeholder="e.g. Metformina"
-              value={medDrug}
-              onChange={(e) => setMedDrug(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Laboratory</label>
-            <Input
-              placeholder="e.g. Merck"
-              value={medLab}
-              onChange={(e) => setMedLab(e.target.value)}
             />
           </div>
         </div>
