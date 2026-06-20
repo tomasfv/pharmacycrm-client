@@ -460,6 +460,7 @@ export function PatientDetailPage() {
                 <div key={idx} className="flex gap-2 items-start">
                   <div className="flex-1">
                     <DropdownSelect
+                      searchable
                       options={medicationOptions}
                       placeholder="Select medication"
                       value={row.medicationId}

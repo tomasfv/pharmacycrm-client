@@ -10,6 +10,7 @@ interface DropdownSelectProps {
   placeholder?: string;
   className?: string;
   error?: string;
+  searchable?: boolean;
 }
 
 export function DropdownSelect({
@@ -19,6 +20,7 @@ export function DropdownSelect({
   placeholder,
   className,
   error,
+  searchable,
 }: DropdownSelectProps) {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -26,58 +28,127 @@ export function DropdownSelect({
 
   const selected = options.find((o) => o.value === value);
 
+  const close = () => setOpen(false);
+
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (
-        buttonRef.current &&
-        !buttonRef.current.contains(e.target as Node) &&
-        !(e.target as HTMLElement)?.closest?.('[data-dropdown-menu]')
-      ) {
-        setOpen(false);
-      }
+      const target = e.target as HTMLElement;
+      if (target?.closest?.('[data-dropdown-menu]')) return;
+      if (buttonRef.current?.contains(target)) return;
+      if (inputRef.current?.contains(target)) return;
+      close();
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const toggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!open && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      const estimatedHeight = Math.min(options.length, 10) * 36 + 16;
-      const spaceBelow = window.innerHeight - rect.bottom;
-      const openUp = spaceBelow < estimatedHeight;
-      setMenuPos({
-        top: openUp ? rect.top - 4 : rect.bottom + 4,
-        left: rect.left,
-        width: rect.width,
-        openUp,
-      });
-    }
-    setOpen(!open);
+  const positionMenu = (el: HTMLElement) => {
+    const rect = el.getBoundingClientRect();
+    const estimatedHeight = Math.min(options.length, 10) * 36 + 16;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openUp = spaceBelow < estimatedHeight;
+    setMenuPos({
+      top: openUp ? rect.top - 4 : rect.bottom + 4,
+      left: rect.left,
+      width: rect.width,
+      openUp,
+    });
   };
 
   const select = (optValue: string) => {
     onChange(optValue);
-    setOpen(false);
+    close();
+  };
+
+  // --- Searchable mode ---
+
+  const [inputValue, setInputValue] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const selectedLabel = selected?.label || '';
+
+  useEffect(() => {
+    if (!open) setInputValue(selectedLabel);
+  }, [selectedLabel, open]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+    if (!open) {
+      if (inputRef.current) positionMenu(inputRef.current);
+      setOpen(true);
+    }
+  };
+
+  const handleInputFocus = () => {
+    if (!open) {
+      setInputValue(selectedLabel);
+      if (inputRef.current) positionMenu(inputRef.current);
+      setOpen(true);
+    }
+    inputRef.current?.select();
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      close();
+      setInputValue(selectedLabel);
+    }
+  };
+
+  const filtered = inputValue
+    ? options.filter((o) => o.label.toLowerCase().includes(inputValue.toLowerCase()))
+    : options;
+
+  const handleSelect = (optValue: string, optLabel: string) => {
+    select(optValue);
+    if (searchable) setInputValue(optLabel);
   };
 
   return (
     <div className={cn('relative', className)}>
-      <button
-        ref={buttonRef}
-        type="button"
-        onClick={toggle}
-        className={cn(
-          'flex w-full items-center justify-between rounded-lg border bg-white px-3 py-2 text-sm transition-colors',
-          open ? 'border-primary-500 ring-1 ring-primary-500' : 'border-gray-300',
-          !selected && placeholder ? 'text-gray-400' : 'text-gray-900',
-          error && 'border-red-500',
-        )}
-      >
-        <span className="truncate">{selected ? selected.label : placeholder || 'Select...'}</span>
-        <ChevronDownIcon className={cn('h-4 w-4 text-gray-400 transition-transform', open && 'rotate-180')} />
-      </button>
+      {searchable ? (
+        <div className="relative">
+          <input
+            ref={inputRef}
+            type="text"
+            value={inputValue}
+            onChange={handleInputChange}
+            onFocus={handleInputFocus}
+            onKeyDown={handleInputKeyDown}
+            placeholder={placeholder || 'Search...'}
+            className={cn(
+              'flex w-full items-center rounded-lg border bg-white px-3 py-2 pr-8 text-sm outline-none transition-colors',
+              open ? 'border-primary-500 ring-1 ring-primary-500' : 'border-gray-300',
+              error && 'border-red-500',
+            )}
+          />
+          <ChevronDownIcon
+            className={cn(
+              'absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none transition-transform',
+              open && 'rotate-180',
+            )}
+          />
+        </div>
+      ) : (
+        <button
+          ref={buttonRef}
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!open && buttonRef.current) positionMenu(buttonRef.current);
+            setOpen(!open);
+          }}
+          className={cn(
+            'flex w-full items-center justify-between rounded-lg border bg-white px-3 py-2 text-sm transition-colors',
+            open ? 'border-primary-500 ring-1 ring-primary-500' : 'border-gray-300',
+            !selected && placeholder ? 'text-gray-400' : 'text-gray-900',
+            error && 'border-red-500',
+          )}
+        >
+          <span className="truncate">{selected ? selected.label : placeholder || 'Select...'}</span>
+          <ChevronDownIcon className={cn('h-4 w-4 text-gray-400 transition-transform', open && 'rotate-180')} />
+        </button>
+      )}
       {open &&
         createPortal(
           <div
@@ -95,26 +166,30 @@ export function DropdownSelect({
                 <button
                   type="button"
                   onMouseDown={(e) => e.stopPropagation()}
-                  onClick={() => select('')}
+                  onClick={() => handleSelect('', placeholder)}
                   className="w-full text-left px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-50 transition-colors"
                 >
                   {placeholder}
                 </button>
               )}
-              {options.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onClick={() => select(opt.value)}
-                  className={cn(
-                    'w-full text-left px-3 py-1.5 text-sm transition-colors hover:bg-gray-50',
-                    opt.value === value ? 'bg-primary-50 text-primary-700 font-medium' : 'text-gray-900',
-                  )}
-                >
-                  {opt.label}
-                </button>
-              ))}
+              {filtered.length === 0 ? (
+                <p className="px-3 py-4 text-sm text-gray-400 text-center">No results</p>
+              ) : (
+                filtered.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={() => handleSelect(opt.value, opt.label)}
+                    className={cn(
+                      'w-full text-left px-3 py-1.5 text-sm transition-colors hover:bg-gray-50',
+                      opt.value === value ? 'bg-primary-50 text-primary-700 font-medium' : 'text-gray-900',
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))
+              )}
             </div>
           </div>,
           document.body,
