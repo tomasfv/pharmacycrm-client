@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchOrders, addOrder, updateOrder } from '@/features/orders/ordersSlice';
 import { fetchMedications, selectMedicationOptions, addMedication } from '@/features/medications/medicationsSlice';
@@ -46,6 +47,7 @@ function buildTimeline(
   patient: { id: string; createdAt: string; name: string },
   orders: Order[],
   followUps: { id: string; scheduledDate: string; status: FollowUpStatus; notes?: string; createdAt: string }[],
+  t: (key: string, options?: Record<string, string>) => string,
 ): ActivityEvent[] {
   const events: ActivityEvent[] = [];
 
@@ -54,7 +56,7 @@ function buildTimeline(
     date: patient.createdAt,
     sortDate: patient.createdAt,
     type: 'patient_created',
-    description: 'Patient registered in the system',
+    description: t('patient.registeredInSystem'),
   });
 
   for (const rx of orders) {
@@ -64,14 +66,14 @@ function buildTimeline(
       date: rx.createdAt,
       sortDate: rx.createdAt,
       type: 'order_issued',
-      description: `Order issued: ${names}`,
+      description: t('order.issuedWithMedications', { names }),
     });
     events.push({
       id: `evt-rx-pickup-${rx.id}`,
       date: rx.lastPickupDate,
       sortDate: rx.createdAt,
       type: 'order_pickup',
-      description: `Order picked up: ${names}`,
+      description: t('order.pickedUpWithMedications', { names }),
     });
   }
 
@@ -82,7 +84,7 @@ function buildTimeline(
       date: fu.scheduledDate,
       sortDate: fu.createdAt,
       type: 'follow_up',
-      description: `Follow-up: ${label}`,
+      description: t('followUp.withStatus', { label }),
       details: fu.notes || undefined,
       status: fu.status,
     });
@@ -99,6 +101,7 @@ const emptyMedicationRow: MedicationRow = {
 };
 
 export function PatientDetailPage() {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const { id } = useParams();
   const navigate = useNavigate();
@@ -134,25 +137,25 @@ export function PatientDetailPage() {
   );
 
   const timeline = useMemo(
-    () => (patient ? buildTimeline(patient, patientOrders, patientFollowUps) : []),
-    [patient, patientOrders, patientFollowUps],
+    () => (patient ? buildTimeline(patient, patientOrders, patientFollowUps, t) : []),
+    [patient, patientOrders, patientFollowUps, t],
   );
 
   if (!patient) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">Patient not found</p>
+        <p className="text-gray-500">{t('patient.notFound')}</p>
         <Button variant="secondary" className="mt-4" onClick={() => navigate('/patients')}>
-          Back to Patients
+          {t('common.backToPatients')}
         </Button>
       </div>
     );
   }
 
   const tabs = [
-    { id: 'info', label: 'Personal Information' },
-    { id: 'orders', label: 'Orders', count: patientOrders.length },
-    { id: 'history', label: 'Activity', count: timeline.length },
+    { id: 'info', label: t('patient.patientInfo') },
+    { id: 'orders', label: t('patient.orders'), count: patientOrders.length },
+    { id: 'history', label: t('patient.activityLog'), count: timeline.length },
   ];
 
   const handleAddMedicationRow = () => {
@@ -180,7 +183,7 @@ export function PatientDetailPage() {
 
   const handleCreateMedication = async () => {
     if (!medName.trim()) {
-      showSnackbar('Medication name is required', 'error');
+      showSnackbar(t('medication.nameRequired'), 'error');
       return;
     }
     try {
@@ -189,9 +192,9 @@ export function PatientDetailPage() {
       })).unwrap();
       setShowMedForm(false);
       resetMedForm();
-      showSnackbar('Medication created successfully', 'success');
+      showSnackbar(t('medication.createdSuccess'), 'success');
     } catch {
-      showSnackbar('Failed to create medication', 'error');
+      showSnackbar(t('medication.createFailed'), 'error');
     }
   };
 
@@ -209,7 +212,7 @@ export function PatientDetailPage() {
   const handleCreateRx = async () => {
     const validMeds = rxMeds.filter((m) => m.medicationId && m.quantity);
     if (validMeds.length === 0) {
-      showSnackbar('Add at least one medication with quantity', 'error');
+      showSnackbar(t('order.requireMedication'), 'error');
       return;
     }
     const medications: OrderMedication[] = validMeds.map((m) => ({
@@ -224,7 +227,7 @@ export function PatientDetailPage() {
           data: { medications, notes: rxNotes.trim() || undefined },
         })).unwrap();
         setEditingOrderId(null);
-        showSnackbar('Order updated successfully', 'success');
+        showSnackbar(t('order.updatedSuccess'), 'success');
       } else {
         await dispatch(addOrder({
           patientId: patient.id,
@@ -235,13 +238,13 @@ export function PatientDetailPage() {
           nextPickupDate: getLocalDateDaysFromNow(30),
         })).unwrap();
         dispatch(fetchFollowUps());
-        showSnackbar('Order created successfully', 'success');
+        showSnackbar(t('order.createdSuccess'), 'success');
       }
       setShowRxForm(false);
       setRxMeds([{ ...emptyMedicationRow }]);
       setRxNotes('');
     } catch {
-      showSnackbar(editingOrderId ? 'Failed to update order' : 'Failed to create order', 'error');
+      showSnackbar(editingOrderId ? t('order.updateFailed') : t('order.createFailed'), 'error');
     }
   };
 
@@ -256,10 +259,10 @@ export function PatientDetailPage() {
         </button>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{patient.name}</h1>
-          <p className="text-sm text-gray-500">Patient ID: {patient.id}</p>
+          <p className="text-sm text-gray-500">{t('patient.patientId')}: {patient.id}</p>
         </div>
         <Badge variant={patient.status === 'active' ? 'success' : 'default'}>
-          {patient.status === 'active' ? 'Active' : 'Inactive'}
+          {patient.status === 'active' ? t('common.active') : t('common.inactive')}
         </Badge>
       </div>
 
@@ -273,23 +276,23 @@ export function PatientDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Contact Information</CardTitle>
+              <CardTitle>{t('patient.contactInfo')}</CardTitle>
             </CardHeader>
             <dl className="space-y-3">
               <div className="flex justify-between">
-                <dt className="text-sm text-gray-500">Phone</dt>
+                <dt className="text-sm text-gray-500">{t('patient.phone')}</dt>
                 <dd className="text-sm font-medium text-gray-900">{patient.phone}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-sm text-gray-500">National ID</dt>
+                <dt className="text-sm text-gray-500">{t('patient.dni')}</dt>
                 <dd className="text-sm font-medium text-gray-900">{patient.dni || '\u2014'}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-sm text-gray-500">Address</dt>
+                <dt className="text-sm text-gray-500">{t('patient.address')}</dt>
                 <dd className="text-sm font-medium text-gray-900">{patient.address || '\u2014'}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-sm text-gray-500">Email</dt>
+                <dt className="text-sm text-gray-500">{t('patient.email')}</dt>
                 <dd className="text-sm font-medium text-gray-900">{patient.email}</dd>
               </div>
             </dl>
@@ -297,15 +300,15 @@ export function PatientDetailPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Insurance Information</CardTitle>
+              <CardTitle>{t('patient.insuranceInfo')}</CardTitle>
             </CardHeader>
             <dl className="space-y-3">
               <div className="flex justify-between">
-                <dt className="text-sm text-gray-500">Health Insurance</dt>
+                <dt className="text-sm text-gray-500">{t('patient.healthInsurance')}</dt>
                 <dd className="text-sm font-medium text-gray-900">{patient.healthInsurance}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-sm text-gray-500">Member Number</dt>
+                <dt className="text-sm text-gray-500">{t('patient.memberNumber')}</dt>
                 <dd className="text-sm font-medium text-gray-900">{patient.memberNumber}</dd>
               </div>
             </dl>
@@ -314,7 +317,7 @@ export function PatientDetailPage() {
           {patient.notes && (
             <Card>
               <CardHeader>
-                <CardTitle>Notes</CardTitle>
+                <CardTitle>{t('patient.notes')}</CardTitle>
               </CardHeader>
               <p className="text-sm text-gray-700">{patient.notes}</p>
             </Card>
@@ -322,19 +325,19 @@ export function PatientDetailPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Timeline</CardTitle>
+              <CardTitle>{t('patient.timeline')}</CardTitle>
             </CardHeader>
             <dl className="space-y-3">
               <div className="flex justify-between">
-                <dt className="text-sm text-gray-500">Created</dt>
+                <dt className="text-sm text-gray-500">{t('common.created')}</dt>
                 <dd className="text-sm font-medium text-gray-900">{formatDate(patient.createdAt)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-sm text-gray-500">Last Updated</dt>
+                <dt className="text-sm text-gray-500">{t('common.lastUpdated')}</dt>
                 <dd className="text-sm font-medium text-gray-900">{formatDate(patient.updatedAt)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-sm text-gray-500">Next Follow-Up</dt>
+                <dt className="text-sm text-gray-500">{t('patient.nextFollowUp')}</dt>
                 <dd className="text-sm font-medium text-gray-900">{formatDate(patient.nextFollowUpDate)}</dd>
               </div>
             </dl>
@@ -345,31 +348,31 @@ export function PatientDetailPage() {
       {activeTab === 'orders' && (
         <Card>
           <CardHeader className="flex items-center justify-between">
-            <CardTitle>Orders ({patientOrders.length})</CardTitle>
+            <CardTitle>{`${t('patient.orders')} (${patientOrders.length})`}</CardTitle>
             <div className="flex gap-2">
               <Button size="sm" variant="secondary" onClick={() => setShowMedForm(true)}>
                 <PlusIcon className="h-4 w-4" />
-                New Medication
+                {t('medication.new')}
               </Button>
               <Button size="sm" onClick={() => setShowRxForm(true)}>
                 <PlusIcon className="h-4 w-4" />
-                New Order
+                {t('order.newOrder')}
               </Button>
             </div>
           </CardHeader>
           {patientOrders.length === 0 ? (
-            <p className="text-sm text-gray-500">No orders registered.</p>
+            <p className="text-sm text-gray-500">{t('order.noOrders')}</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-gray-500 text-xs uppercase border-b">
-                    <th className="pb-3 pr-4 font-medium">Issue Date</th>
-                    <th className="pb-3 pr-4 font-medium">Medications</th>
-                    <th className="pb-3 pr-4 font-medium">Last Pickup</th>
-                    <th className="pb-3 pr-4 font-medium">Next Pickup</th>
-                    <th className="pb-3 pr-4 font-medium">Notes</th>
-                    <th className="pb-3 font-medium">Actions</th>
+                    <th className="pb-3 pr-4 font-medium">{t('order.issueDate')}</th>
+                    <th className="pb-3 pr-4 font-medium">{t('order.medications')}</th>
+                    <th className="pb-3 pr-4 font-medium">{t('order.lastPickup')}</th>
+                    <th className="pb-3 pr-4 font-medium">{t('order.nextPickup')}</th>
+                    <th className="pb-3 pr-4 font-medium">{t('order.notes')}</th>
+                    <th className="pb-3 font-medium">{t('order.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -406,10 +409,10 @@ export function PatientDetailPage() {
       {activeTab === 'history' && (
         <Card>
           <CardHeader>
-            <CardTitle>Activity Timeline ({timeline.length} events)</CardTitle>
+            <CardTitle>{`${t('patient.activityLog')} (${timeline.length})`}</CardTitle>
           </CardHeader>
           {timeline.length === 0 ? (
-            <p className="text-sm text-gray-500">No activity recorded.</p>
+            <p className="text-sm text-gray-500">{t('activity.none')}</p>
           ) : (
             <div className="relative px-1">
               <div className="absolute left-4 top-3 bottom-3 w-0.5 bg-gray-200" />
@@ -449,12 +452,12 @@ export function PatientDetailPage() {
       <Dialog
         open={showRxForm}
         onClose={() => { setShowRxForm(false); setEditingOrderId(null); setRxMeds([{ ...emptyMedicationRow }]); setRxNotes(''); }}
-        title={editingOrderId ? 'Edit Order' : 'New Order'}
+        title={editingOrderId ? t('order.editOrder') : t('order.newOrder')}
         size="lg"
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Medications</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('order.medications')}</label>
             <div className="space-y-3">
               {rxMeds.map((row, idx) => (
                 <div key={idx} className="flex gap-2 items-start">
@@ -462,14 +465,14 @@ export function PatientDetailPage() {
                     <DropdownSelect
                       searchable
                       options={medicationOptions}
-                      placeholder="Select medication"
+                      placeholder={t('order.selectMedication')}
                       value={row.medicationId}
                       onChange={(value) => handleMedicationChange(idx, 'medicationId', value)}
                     />
                   </div>
                   <div className="w-28">
                     <Input
-                      placeholder="Qty"
+                      placeholder={t('order.quantity')}
                       value={row.quantity}
                       onChange={(e) => handleMedicationChange(idx, 'quantity', e.target.value)}
                     />
@@ -493,14 +496,14 @@ export function PatientDetailPage() {
               className="mt-2 text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
             >
               <PlusIcon className="h-3.5 w-3.5" />
-              Add medication
+              {t('common.add')}
             </button>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('order.notes')}</label>
             <Input
-              placeholder="Optional notes for this order"
+              placeholder={t('order.notesPlaceholder')}
               value={rxNotes}
               onChange={(e) => setRxNotes(e.target.value)}
             />
@@ -512,10 +515,10 @@ export function PatientDetailPage() {
             variant="secondary"
             onClick={() => { setShowRxForm(false); setEditingOrderId(null); setRxMeds([{ ...emptyMedicationRow }]); setRxNotes(''); }}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleCreateRx}>
-            {editingOrderId ? 'Save Changes' : 'Create Order'}
+            {editingOrderId ? t('order.updateOrder') : t('order.createOrder')}
           </Button>
         </div>
       </Dialog>
@@ -523,14 +526,14 @@ export function PatientDetailPage() {
       <Dialog
         open={showMedForm}
         onClose={() => { setShowMedForm(false); resetMedForm(); }}
-        title="New Medication"
+        title={t('medication.new')}
         size="md"
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Medication Name *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('medication.name')}</label>
             <Input
-              placeholder="e.g. Metformina 850mg"
+              placeholder={t('medication.namePlaceholder')}
               value={medName}
               onChange={(e) => setMedName(e.target.value)}
               autoFocus
@@ -539,10 +542,10 @@ export function PatientDetailPage() {
         </div>
         <div className="flex justify-end gap-3 mt-6">
           <Button variant="secondary" onClick={() => { setShowMedForm(false); resetMedForm(); }}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleCreateMedication}>
-            Create Medication
+            {t('medication.create')}
           </Button>
         </div>
       </Dialog>

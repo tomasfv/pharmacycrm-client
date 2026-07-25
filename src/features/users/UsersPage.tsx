@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchUsers, addUser, updateUser, deleteUser } from './usersSlice';
 import { Card, Button, Input, Select, Dialog, DataGrid, Badge } from '@/components/ui';
@@ -15,21 +16,8 @@ const roleColors: Record<string, string> = {
   staff: 'bg-gray-100 text-gray-700',
 };
 
-const roleOptions = [
-  { value: 'admin', label: 'Admin' },
-  { value: 'staff', label: 'Staff' },
-];
-
-const userSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters').or(z.literal('')),
-  role: z.enum(['admin', 'staff']),
-});
-
-type UserForm = z.infer<typeof userSchema>;
-
 export function UsersPage() {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const users = useAppSelector((state) => state.users.users);
   const currentUser = useAppSelector((state) => state.auth.user);
@@ -45,6 +33,20 @@ export function UsersPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const perPage = 10;
+
+  const roleOptions = useMemo(() => [
+    { value: 'admin', label: t('user.roleAdmin') },
+    { value: 'staff', label: t('user.roleStaff') },
+  ], [t]);
+
+  const userSchema = useMemo(() => z.object({
+    name: z.string().min(1, t('user.nameRequired')),
+    email: z.string().email(t('user.invalidEmail')),
+    password: z.string().min(6, t('user.passwordLength')).or(z.literal('')),
+    role: z.enum(['admin', 'staff']),
+  }), [t]);
+
+  type UserForm = z.infer<typeof userSchema>;
 
   const filtered = useMemo(
     () =>
@@ -85,14 +87,14 @@ export function UsersPage() {
         if (data.role !== editing.role) payload.role = data.role;
         if (data.password) payload.password = data.password;
         await dispatch(updateUser(payload)).unwrap();
-        showSnackbar('User updated', 'success');
+        showSnackbar(t('user.updated'), 'success');
       } else {
         await dispatch(addUser(data)).unwrap();
-        showSnackbar('User created', 'success');
+        showSnackbar(t('user.created'), 'success');
       }
       setOpen(false);
     } catch {
-      showSnackbar('Failed to save user', 'error');
+      showSnackbar(t('user.saveError'), 'error');
     }
   };
 
@@ -101,9 +103,9 @@ export function UsersPage() {
       try {
         await dispatch(deleteUser(deleteId)).unwrap();
         setDeleteId(null);
-        showSnackbar('User deleted', 'success');
+        showSnackbar(t('user.deleted'), 'success');
       } catch {
-        showSnackbar('Failed to delete user', 'error');
+        showSnackbar(t('user.deleteError'), 'error');
       }
     }
   };
@@ -111,7 +113,7 @@ export function UsersPage() {
   const columns = [
     {
       key: 'name',
-      header: 'Name',
+      header: t('user.name'),
       sortable: true,
       render: (u: User) => (
         <div className="flex items-center gap-3">
@@ -125,10 +127,10 @@ export function UsersPage() {
         </div>
       ),
     },
-    { key: 'email', header: 'Email' },
+    { key: 'email', header: t('user.email') },
     {
       key: 'role',
-      header: 'Role',
+      header: t('user.role'),
       render: (u: User) => <Badge className={roleColors[u.role]}>{u.role}</Badge>,
     },
     {
@@ -155,19 +157,19 @@ export function UsersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Users</h1>
-          <p className="text-sm text-gray-500 mt-1">{users.length} users</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('user.title')}</h1>
+          <p className="text-sm text-gray-500 mt-1">{t('user.usersCount', { count: users.length })}</p>
         </div>
         <Button onClick={openAdd}>
           <PlusIcon className="h-4 w-4" />
-          Add User
+          {t('user.addUser')}
         </Button>
       </div>
 
       <Card>
         <div className="relative mb-4">
           <Input
-            placeholder="Search by name or email..."
+            placeholder={t('user.searchPlaceholder')}
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -182,35 +184,35 @@ export function UsersPage() {
           page={page}
           totalPages={totalPages}
           onPageChange={setPage}
-          emptyMessage="No users found."
+          emptyMessage={t('user.noUsers')}
         />
       </Card>
 
-      <Dialog open={open} onClose={() => setOpen(false)} title={editing ? 'Edit User' : 'Add User'}>
+      <Dialog open={open} onClose={() => setOpen(false)} title={editing ? t('user.editUser') : t('user.addUser')}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <Input id="name" label="Name" placeholder="Full name" error={form.formState.errors.name?.message} {...form.register('name')} />
-          <Input id="email" label="Email" type="email" placeholder="email@example.com" error={form.formState.errors.email?.message} {...form.register('email')} />
+          <Input id="name" label={t('user.name')} placeholder={t('user.namePlaceholder')} error={form.formState.errors.name?.message} {...form.register('name')} />
+          <Input id="email" label={t('user.email')} type="email" placeholder={t('user.emailPlaceholder')} error={form.formState.errors.email?.message} {...form.register('email')} />
           <Input
             id="password"
-            label={editing ? 'New Password (leave blank to keep)' : 'Password'}
+            label={editing ? t('user.newPassword') : t('user.password')}
             type="password"
-            placeholder={editing ? 'Leave blank to keep current' : 'At least 6 characters'}
+            placeholder={editing ? t('user.passwordPlaceholderEdit') : t('user.passwordPlaceholder')}
             error={form.formState.errors.password?.message}
             {...form.register('password')}
           />
-          <Select id="role" label="Role" options={roleOptions} error={form.formState.errors.role?.message} {...form.register('role')} />
+          <Select id="role" label={t('user.role')} options={roleOptions} error={form.formState.errors.role?.message} {...form.register('role')} />
           <div className="flex justify-end gap-3 pt-2">
-            <Button variant="secondary" type="button" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit">{editing ? 'Save Changes' : 'Add User'}</Button>
+            <Button variant="secondary" type="button" onClick={() => setOpen(false)}>{t('common.cancel')}</Button>
+            <Button type="submit">{editing ? t('common.save') : t('user.addUser')}</Button>
           </div>
         </form>
       </Dialog>
 
-      <Dialog open={!!deleteId} onClose={() => setDeleteId(null)} title="Delete User" size="sm">
-        <p className="text-sm text-gray-600 mb-4">Are you sure you want to delete this user?</p>
+      <Dialog open={!!deleteId} onClose={() => setDeleteId(null)} title={t('user.deleteUser')} size="sm">
+        <p className="text-sm text-gray-600 mb-4">{t('user.deleteConfirm')}</p>
         <div className="flex justify-end gap-3">
-          <Button variant="secondary" onClick={() => setDeleteId(null)}>Cancel</Button>
-          <Button variant="danger" onClick={handleDelete}>Delete</Button>
+          <Button variant="secondary" onClick={() => setDeleteId(null)}>{t('common.cancel')}</Button>
+          <Button variant="danger" onClick={handleDelete}>{t('common.delete')}</Button>
         </div>
       </Dialog>
     </div>

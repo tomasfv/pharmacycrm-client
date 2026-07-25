@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchContacts, addContact, updateContact, deleteContact } from './contactsSlice';
 import { Card, Button, Input, Select, Dialog, DataGrid, Badge, Tooltip } from '@/components/ui';
@@ -11,14 +12,6 @@ import type { Contact, ContactCategory } from '@/types';
 import { getInitials } from '@/utils';
 import { PlusIcon, PencilSquareIcon, TrashIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
-const categoryLabels: Record<ContactCategory, string> = {
-  supplier: 'Supplier',
-  delivery: 'Delivery',
-  doctor: 'Doctor',
-  lab: 'Lab',
-  other: 'Other',
-};
-
 const categoryColors: Record<ContactCategory, string> = {
   supplier: 'bg-blue-100 text-blue-800',
   delivery: 'bg-orange-100 text-orange-800',
@@ -27,25 +20,8 @@ const categoryColors: Record<ContactCategory, string> = {
   other: 'bg-gray-100 text-gray-700',
 };
 
-const categoryOptions = [
-  { value: 'supplier', label: 'Supplier' },
-  { value: 'delivery', label: 'Delivery' },
-  { value: 'doctor', label: 'Doctor' },
-  { value: 'lab', label: 'Lab' },
-  { value: 'other', label: 'Other' },
-];
-
-const contactSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  phone: z.string().min(1, 'Phone is required'),
-  email: z.string().email('Invalid email').or(z.literal('')),
-  category: z.enum(['supplier', 'delivery', 'doctor', 'lab', 'other']),
-  notes: z.string(),
-});
-
-type ContactForm = z.infer<typeof contactSchema>;
-
 export function ContactsPage() {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const contacts = useAppSelector((state) => state.contacts.contacts);
   const { showSnackbar } = useSnackbar();
@@ -53,12 +29,39 @@ export function ContactsPage() {
   useEffect(() => {
     dispatch(fetchContacts());
   }, [dispatch]);
+
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Contact | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const perPage = 10;
+
+  const categoryLabels: Record<ContactCategory, string> = {
+    supplier: t('contact.categorySupplier'),
+    delivery: t('contact.categoryDelivery'),
+    doctor: t('contact.categoryDoctor'),
+    lab: t('contact.categoryLab'),
+    other: t('contact.categoryOther'),
+  };
+
+  const categoryOptions = useMemo(() => [
+    { value: 'supplier', label: t('contact.categorySupplier') },
+    { value: 'delivery', label: t('contact.categoryDelivery') },
+    { value: 'doctor', label: t('contact.categoryDoctor') },
+    { value: 'lab', label: t('contact.categoryLab') },
+    { value: 'other', label: t('contact.categoryOther') },
+  ], [t]);
+
+  const contactSchema = useMemo(() => z.object({
+    name: z.string().min(1, t('contact.nameRequired')),
+    phone: z.string().min(1, t('contact.phoneRequired')),
+    email: z.string().email(t('contact.invalidEmail')).or(z.literal('')),
+    category: z.enum(['supplier', 'delivery', 'doctor', 'lab', 'other']),
+    notes: z.string(),
+  }), [t]);
+
+  type ContactForm = z.infer<typeof contactSchema>;
 
   const filtered = useMemo(
     () =>
@@ -100,14 +103,14 @@ export function ContactsPage() {
     try {
       if (editing) {
         await dispatch(updateContact({ ...editing, ...data })).unwrap();
-        showSnackbar('Contact updated', 'success');
+        showSnackbar(t('contact.updated'), 'success');
       } else {
         await dispatch(addContact(data as any)).unwrap();
-        showSnackbar('Contact added', 'success');
+        showSnackbar(t('contact.added'), 'success');
       }
       setOpen(false);
     } catch {
-      showSnackbar('Failed to save contact', 'error');
+      showSnackbar(t('contact.saveError'), 'error');
     }
   };
 
@@ -116,9 +119,9 @@ export function ContactsPage() {
       try {
         await dispatch(deleteContact(deleteId)).unwrap();
         setDeleteId(null);
-        showSnackbar('Contact deleted', 'success');
+        showSnackbar(t('contact.deleted'), 'success');
       } catch {
-        showSnackbar('Failed to delete contact', 'error');
+        showSnackbar(t('contact.deleteError'), 'error');
       }
     }
   };
@@ -126,7 +129,7 @@ export function ContactsPage() {
   const columns = [
     {
       key: 'name',
-      header: 'Name',
+      header: t('contact.name'),
       sortable: true,
       render: (c: Contact) => (
         <div className="flex items-center gap-3">
@@ -140,15 +143,15 @@ export function ContactsPage() {
         </div>
       ),
     },
-    { key: 'phone', header: 'Phone' },
+    { key: 'phone', header: t('contact.phone') },
     {
       key: 'category',
-      header: 'Category',
+      header: t('contact.category'),
       render: (c: Contact) => <Badge className={categoryColors[c.category]}>{categoryLabels[c.category]}</Badge>,
     },
     {
       key: 'notes',
-      header: 'Notes',
+      header: t('contact.notes'),
       render: (c: Contact) => (
         <Tooltip content={<p className="text-sm text-gray-700 max-w-xs">{c.notes}</p>}>
           <span className="text-sm text-gray-500 truncate block max-w-[200px] cursor-default">
@@ -177,12 +180,12 @@ export function ContactsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Contacts</h1>
-          <p className="text-sm text-gray-500 mt-1">{contacts.length} contacts</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('contact.title')}</h1>
+          <p className="text-sm text-gray-500 mt-1">{t('contact.count', { count: contacts.length })}</p>
         </div>
         <Button onClick={openAdd}>
           <PlusIcon className="h-4 w-4" />
-          Add Contact
+          {t('contact.addContact')}
         </Button>
       </div>
 
@@ -190,7 +193,7 @@ export function ContactsPage() {
         <div className="relative mb-4">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="Search by name, phone, or email..."
+            placeholder={t('contact.searchPlaceholder')}
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -206,38 +209,38 @@ export function ContactsPage() {
           page={page}
           totalPages={totalPages}
           onPageChange={setPage}
-          emptyMessage="No contacts found."
+          emptyMessage={t('contact.noContacts')}
         />
       </Card>
 
-      <Dialog open={open} onClose={() => setOpen(false)} title={editing ? 'Edit Contact' : 'Add Contact'}>
+      <Dialog open={open} onClose={() => setOpen(false)} title={editing ? t('contact.editContact') : t('contact.addContact')}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <Input id="name" label="Name" placeholder="Full name or company" error={form.formState.errors.name?.message} {...form.register('name')} />
-          <Input id="phone" label="Phone" placeholder="+52 55 1234 5678" error={form.formState.errors.phone?.message} {...form.register('phone')} />
-          <Input id="email" label="Email" placeholder="email@example.com" error={form.formState.errors.email?.message} {...form.register('email')} />
-          <Select id="category" label="Category" options={categoryOptions} error={form.formState.errors.category?.message} {...form.register('category')} />
+          <Input id="name" label={t('contact.name')} placeholder={t('contact.namePlaceholder')} error={form.formState.errors.name?.message} {...form.register('name')} />
+          <Input id="phone" label={t('contact.phone')} placeholder={t('contact.phonePlaceholder')} error={form.formState.errors.phone?.message} {...form.register('phone')} />
+          <Input id="email" label={t('contact.email')} placeholder={t('contact.emailPlaceholder')} error={form.formState.errors.email?.message} {...form.register('email')} />
+          <Select id="category" label={t('contact.category')} options={categoryOptions} error={form.formState.errors.category?.message} {...form.register('category')} />
           <div>
-            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">{t('contact.notes')}</label>
             <textarea
               id="notes"
               rows={3}
               className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-              placeholder="Address, schedule, any relevant info..."
+              placeholder={t('contact.notesPlaceholder')}
               {...form.register('notes')}
             />
           </div>
           <div className="flex justify-end gap-3 pt-2">
-            <Button variant="secondary" type="button" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit">{editing ? 'Save Changes' : 'Add Contact'}</Button>
+            <Button variant="secondary" type="button" onClick={() => setOpen(false)}>{t('common.cancel')}</Button>
+            <Button type="submit">{editing ? t('common.save') : t('contact.addContact')}</Button>
           </div>
         </form>
       </Dialog>
 
-      <Dialog open={!!deleteId} onClose={() => setDeleteId(null)} title="Delete Contact" size="sm">
-        <p className="text-sm text-gray-600 mb-4">Are you sure you want to delete this contact?</p>
+      <Dialog open={!!deleteId} onClose={() => setDeleteId(null)} title={t('contact.deleteContact')} size="sm">
+        <p className="text-sm text-gray-600 mb-4">{t('contact.deleteConfirm')}</p>
         <div className="flex justify-end gap-3">
-          <Button variant="secondary" onClick={() => setDeleteId(null)}>Cancel</Button>
-          <Button variant="danger" onClick={handleDelete}>Delete</Button>
+          <Button variant="secondary" onClick={() => setDeleteId(null)}>{t('common.cancel')}</Button>
+          <Button variant="danger" onClick={handleDelete}>{t('common.delete')}</Button>
         </div>
       </Dialog>
     </div>

@@ -1,20 +1,13 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { moveFollowUp } from '../followupsSlice';
 import { DataGrid, Input, Tooltip } from '@/components/ui';
 import type { FollowUp, FollowUpStatus, Patient } from '@/types';
-import { formatDate, statusLabels, statusColors } from '@/utils';
+import { formatDate, statusColors } from '@/utils';
 import { MagnifyingGlassIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-
-const statusOptions: { value: FollowUpStatus; label: string }[] = [
-  { value: 'pending_contact', label: 'Pending Contact' },
-  { value: 'contacted', label: 'Contacted' },
-  { value: 'order_received', label: 'Order Received' },
-  { value: 'prepared', label: 'Prepared' },
-  { value: 'delivered', label: 'Delivered' },
-];
 
 function StatusDropdown({
   value,
@@ -23,9 +16,18 @@ function StatusDropdown({
   value: FollowUpStatus;
   onChange: (status: FollowUpStatus) => void;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+
+  const statusOptions: FollowUpStatus[] = [
+    'pending_contact',
+    'contacted',
+    'order_received',
+    'prepared',
+    'delivered',
+  ];
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -68,7 +70,7 @@ function StatusDropdown({
         onClick={toggle}
         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${statusColors[value]}`}
       >
-        {statusLabels[value]}
+        {t('status.followUp.' + value)}
         <ChevronDownIcon className="h-3 w-3 opacity-60" />
       </button>
       {open &&
@@ -79,19 +81,19 @@ function StatusDropdown({
             style={{ top: menuPos.top, left: menuPos.left }}
             onMouseDown={(e) => e.stopPropagation()}
           >
-            {statusOptions.map((opt) => (
+            {statusOptions.map((s) => (
               <button
-                key={opt.value}
+                key={s}
                 onMouseDown={(e) => e.stopPropagation()}
-                onClick={() => select(opt.value)}
+                onClick={() => select(s)}
                 className={`w-full text-left px-3 py-1.5 text-xs font-medium transition-colors hover:bg-gray-50 ${
-                  opt.value === value ? 'bg-gray-50' : ''
+                  s === value ? 'bg-gray-50' : ''
                 }`}
               >
                 <span
-                  className={`inline-block px-2 py-0.5 rounded-md ${statusColors[opt.value]}`}
+                  className={`inline-block px-2 py-0.5 rounded-md ${statusColors[s]}`}
                 >
-                  {opt.label}
+                  {t('status.followUp.' + s)}
                 </span>
               </button>
             ))}
@@ -103,6 +105,7 @@ function StatusDropdown({
 }
 
 export function FollowUpTable() {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const followUps = useAppSelector((state) => state.followups.followUps);
   const orders = useAppSelector((state) => state.orders.orders);
@@ -155,7 +158,7 @@ export function FollowUpTable() {
   const columns = [
     {
       key: 'patientName',
-      header: 'NAME',
+      header: t('followUp.patient'),
       sortable: true,
       render: (f: FollowUp) => {
         const patient = patientMap.get(f.patientId);
@@ -164,7 +167,7 @@ export function FollowUpTable() {
     },
     {
       key: 'dni',
-      header: 'NATIONAL ID',
+      header: t('followUp.nationalId'),
       render: (f: FollowUp) => {
         const patient = patientMap.get(f.patientId);
         return <span className="text-gray-700">{patient?.dni || '\u2014'}</span>;
@@ -172,7 +175,7 @@ export function FollowUpTable() {
     },
     {
       key: 'healthInsurance',
-      header: 'HEALTH INSURANCE',
+      header: t('followUp.healthInsurance'),
       render: (f: FollowUp) => {
         const patient = patientMap.get(f.patientId);
         return <span className="text-gray-700">{patient?.healthInsurance || '\u2014'}</span>;
@@ -180,7 +183,7 @@ export function FollowUpTable() {
     },
     {
       key: 'memberNumber',
-      header: 'MEMBER #',
+      header: t('followUp.memberNumber'),
       render: (f: FollowUp) => {
         const patient = patientMap.get(f.patientId);
         return <span className="text-gray-700">{patient?.memberNumber || '\u2014'}</span>;
@@ -188,7 +191,7 @@ export function FollowUpTable() {
     },
     {
       key: 'phone',
-      header: 'PHONE',
+      header: t('followUp.phone'),
       render: (f: FollowUp) => {
         const patient = patientMap.get(f.patientId);
         return <span className="text-gray-700">{patient?.phone || '\u2014'}</span>;
@@ -196,21 +199,21 @@ export function FollowUpTable() {
     },
     {
       key: 'lastPickupDate',
-      header: 'LAST PICKUP',
+      header: t('followUp.lastPickup'),
       render: (f: FollowUp) => (
         <span className="text-gray-700">{getPickupDates(f).lastPickup}</span>
       ),
     },
     {
       key: 'nextPickupDate',
-      header: 'NEXT PICKUP',
+      header: t('followUp.nextPickup'),
       render: (f: FollowUp) => (
         <span className="text-gray-700">{getPickupDates(f).nextPickup}</span>
       ),
     },
     {
       key: 'medications',
-      header: 'MEDICATION',
+      header: t('followUp.medication'),
       render: (f: FollowUp) => {
         const rx = f.orderId
           ? orders.find((o) => o.id === f.orderId)
@@ -225,7 +228,7 @@ export function FollowUpTable() {
             content={
               <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                  Order ({formatDate(rx.createdAt)})
+                  {t('followUp.order')} ({formatDate(rx.createdAt)})
                 </p>
                 <ul className="space-y-1">
                   {meds.map((m) => (
@@ -259,7 +262,7 @@ export function FollowUpTable() {
     },
     {
       key: 'status',
-      header: 'FOLLOW UP STATUS',
+      header: t('followUp.status'),
       render: (f: FollowUp) => (
         <StatusDropdown
           value={f.status}
@@ -274,7 +277,7 @@ export function FollowUpTable() {
       <div className="relative mb-4">
         <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
         <Input
-          placeholder="Search by name, ID, insurance, member # or phone..."
+          placeholder={t('followUp.searchPlaceholder')}
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
@@ -290,7 +293,7 @@ export function FollowUpTable() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
-        emptyMessage="No follow-ups found."
+        emptyMessage={t('followUp.noneFound')}
       />
     </div>
   );

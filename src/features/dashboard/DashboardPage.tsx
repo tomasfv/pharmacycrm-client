@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchDashboardMetrics } from './dashboardSlice';
 import { fetchFollowUps } from '@/features/followups/followupsSlice';
@@ -17,6 +18,7 @@ import {
 import { selectDashboardMetrics } from './dashboardSlice';
 
 export function DashboardPage() {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const metrics = useAppSelector(selectDashboardMetrics);
   const { loading } = useAppSelector((state) => state.dashboard);
@@ -31,31 +33,31 @@ export function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-sm text-gray-500 mt-1">Overview of your pharmacy CRM</p>
+        <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.title')}</h1>
+        <p className="text-sm text-gray-500 mt-1">{t('dashboard.overview')}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
-          title="Patients To Contact Today"
+          title={t('dashboard.patientsToContact')}
           value={metrics.patientsToContactToday}
           icon={UserGroupIcon}
           variant="warning"
         />
         <KPICard
-          title="Pending Orders"
+          title={t('dashboard.pendingOrders')}
           value={metrics.pendingOrders}
           icon={BeakerIcon}
           variant="default"
         />
         <KPICard
-          title="Ready For Pickup"
+          title={t('dashboard.readyForPickup')}
           value={metrics.readyForPickup}
           icon={ShoppingBagIcon}
           variant="success"
         />
         <KPICard
-          title="Overdue Patients"
+          title={t('dashboard.overduePatients')}
           value={metrics.overduePatients}
           icon={ExclamationTriangleIcon}
           variant="danger"

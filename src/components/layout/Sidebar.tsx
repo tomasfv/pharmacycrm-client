@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import { cn } from "@/utils";
 import {
   Squares2X2Icon,
@@ -21,22 +22,23 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-const navItems = [
-  { to: "/dashboard", icon: Squares2X2Icon, label: "Dashboard" },
-  { to: "/patients", icon: UserGroupIcon, label: "Patients" },
-  { to: "/followups", icon: ClipboardDocumentListIcon, label: "Follow-Ups" },
-  { to: "/contacts", icon: PhoneIcon, label: "Contacts" },
-  { to: "/medications", icon: BeakerIcon, label: "Medications" },
-  { to: "/reports", icon: ChartBarIcon, label: "Reports" },
-  { to: "/notifications", icon: BellIcon, label: "Notifications" },
-  { to: "/users", icon: UsersIcon, label: "Users" },
-  { to: "/settings", icon: Cog6ToothIcon, label: "Settings" },
-];
-
 export function Sidebar({ collapsed, onClose }: SidebarProps) {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const unreadCount = useAppSelector(selectUnreadCount);
+
+  const navItems = [
+    { to: "/dashboard", icon: Squares2X2Icon, label: t("nav.dashboard") },
+    { to: "/patients", icon: UserGroupIcon, label: t("nav.patients") },
+    { to: "/followups", icon: ClipboardDocumentListIcon, label: t("nav.followUps") },
+    { to: "/contacts", icon: PhoneIcon, label: t("nav.contacts") },
+    { to: "/medications", icon: BeakerIcon, label: t("nav.medications") },
+    { to: "/reports", icon: ChartBarIcon, label: t("nav.reports") },
+    { to: "/notifications", icon: BellIcon, label: t("nav.notifications") },
+    { to: "/users", icon: UsersIcon, label: t("nav.users") },
+    { to: "/settings", icon: Cog6ToothIcon, label: t("nav.settings") },
+  ];
 
   return (
     <>
@@ -96,7 +98,7 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
             className="w-full flex items-center justify-center 2xl:justify-start gap-3 px-0 2xl:px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
           >
             <ArrowRightOnRectangleIcon className="h-5 w-5 shrink-0" />
-            <span className="hidden 2xl:inline">Logout</span>
+            <span className="hidden 2xl:inline">{t('nav.logout')}</span>
           </button>
         </div>
       </aside>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardHeader, CardTitle } from '@/components/ui';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { useAppSelector } from '@/store/hooks';
@@ -6,6 +7,7 @@ import { statusLabels } from '@/utils';
 const COLORS = ['#EAB308', '#3B82F6', '#A855F7', '#F97316', '#22C55E'];
 
 export function FollowUpStatusChart() {
+  const { t } = useTranslation();
   const followUps = useAppSelector((state) => state.followups.followUps);
 
   const statusCounts = followUps.reduce(
@@ -24,7 +26,7 @@ export function FollowUpStatusChart() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Follow-Up Status Distribution</CardTitle>
+        <CardTitle>{t('dashboard.followUpStatusDist')}</CardTitle>
       </CardHeader>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">

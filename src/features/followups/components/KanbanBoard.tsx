@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { moveFollowUp } from '../followupsSlice';
-import { statusLabels, statusColors, formatDate } from '@/utils';
+import { statusColors, formatDate } from '@/utils';
 import { Badge, Tooltip } from '@/components/ui';
 import type { FollowUp, FollowUpStatus } from '@/types';
 
@@ -23,6 +24,7 @@ const columnIcons: Record<FollowUpStatus, string> = {
 };
 
 export function KanbanBoard() {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const followUps = useAppSelector((state) => state.followups.followUps);
   const orders = useAppSelector((state) => state.orders.orders);
@@ -49,7 +51,7 @@ export function KanbanBoard() {
         content={
           <div>
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-              Order ({formatDate(rx.createdAt)})
+              {t('followUp.order')} ({formatDate(rx.createdAt)})
             </p>
             <ul className="space-y-1">
               {meds.map((m) => (
@@ -98,7 +100,7 @@ export function KanbanBoard() {
                 >
                   <div className="flex items-center gap-2 mb-3 px-1">
                     <span className="text-lg">{columnIcons[status]}</span>
-                    <h3 className="text-sm font-semibold text-gray-700">{statusLabels[status]}</h3>
+                    <h3 className="text-sm font-semibold text-gray-700">{t('status.followUp.' + status)}</h3>
                     <span className="ml-auto bg-gray-200 text-gray-600 text-xs font-medium rounded-full h-5 min-w-[20px] flex items-center justify-center px-1">
                       {items.length}
                     </span>
@@ -129,7 +131,7 @@ export function KanbanBoard() {
                                 {formatDate(followUp.scheduledDate)}
                               </span>
                               <Badge className={statusColors[followUp.status]}>
-                                {statusLabels[followUp.status]}
+                                {t('status.followUp.' + followUp.status)}
                               </Badge>
                             </div>
                           </div>

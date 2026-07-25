@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchNotifications, markAsRead, markAllAsRead } from './notificationsSlice';
 import { Card, CardHeader, CardTitle, Button, Badge } from '@/components/ui';
@@ -7,16 +8,17 @@ import { BellIcon, ExclamationCircleIcon, CalendarDaysIcon, ShoppingBagIcon } fr
 import { cn } from '@/utils';
 import type { NotificationType } from '@/types';
 
-const typeConfig: Record<NotificationType, { icon: React.ElementType; label: string; color: string }> = {
-  contact_today: { icon: BellIcon, label: 'Contact Today', color: 'bg-yellow-50 text-yellow-600 border-yellow-200' },
-  overdue_followup: { icon: ExclamationCircleIcon, label: 'Overdue', color: 'bg-red-50 text-red-600 border-red-200' },
-  upcoming_pickup: { icon: ShoppingBagIcon, label: 'Upcoming Pickup', color: 'bg-blue-50 text-blue-600 border-blue-200' },
-};
-
 export function NotificationsPage() {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const notifications = useAppSelector((state) => state.notifications.notifications);
   const unread = notifications.filter((n) => !n.read).length;
+
+  const typeConfig: Record<NotificationType, { icon: React.ElementType; label: string; color: string }> = {
+    contact_today: { icon: BellIcon, label: t('notification.contactToday'), color: 'bg-yellow-50 text-yellow-600 border-yellow-200' },
+    overdue_followup: { icon: ExclamationCircleIcon, label: t('notification.overdue'), color: 'bg-red-50 text-red-600 border-red-200' },
+    upcoming_pickup: { icon: ShoppingBagIcon, label: t('notification.upcomingPickup'), color: 'bg-blue-50 text-blue-600 border-blue-200' },
+  };
 
   useEffect(() => {
     dispatch(fetchNotifications());
@@ -26,14 +28,14 @@ export function NotificationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('notification.title')}</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {unread} unread notification{unread !== 1 ? 's' : ''}
+            {t('notification.unread', { count: unread })}
           </p>
         </div>
         {unread > 0 && (
           <Button variant="secondary" onClick={async () => { try { await dispatch(markAllAsRead()).unwrap(); } catch {} }}>
-            Mark All as Read
+            {t('notification.markAllRead')}
           </Button>
         )}
       </div>
@@ -41,7 +43,7 @@ export function NotificationsPage() {
       <div className="space-y-3">
         {notifications.length === 0 ? (
           <Card>
-            <p className="text-center text-gray-500 py-8">No notifications</p>
+            <p className="text-center text-gray-500 py-8">{t('notification.noNotifications')}</p>
           </Card>
         ) : (
           notifications.map((notification) => {

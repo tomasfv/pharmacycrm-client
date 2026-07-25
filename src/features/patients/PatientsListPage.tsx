@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setSearchQuery, setStatusFilter, selectFilteredPatients, selectPatient, fetchPatients, deletePatient, addPatient, updatePatientAsync } from './patientsSlice';
@@ -7,16 +8,6 @@ import type { Patient } from '@/types';
 import { formatDate, getInitials, getLocalDateString, getLocalDateDaysFromNow } from '@/utils';
 import { PencilSquareIcon, TrashIcon, EyeIcon, MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { useSnackbar } from '@/components/ui';
-
-const statusOptions = [
-  { value: 'active', label: 'Active' },
-  { value: 'inactive', label: 'Inactive' },
-];
-
-const statusBadge = (status: string) => {
-  if (status === 'active') return <Badge variant="success">Active</Badge>;
-  return <Badge variant="default">Inactive</Badge>;
-};
 
 interface PatientForm {
   name: string;
@@ -45,8 +36,19 @@ const emptyForm: PatientForm = {
 export function PatientsListPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { showSnackbar } = useSnackbar();
   const { searchQuery, statusFilter, patients, loading } = useAppSelector((state) => state.patients);
+
+  const statusOptions = [
+    { value: 'active', label: t('patient.statusActive') },
+    { value: 'inactive', label: t('patient.statusInactive') },
+  ];
+
+  const statusBadge = (status: string) => {
+    if (status === 'active') return <Badge variant="success">{t('patient.statusActive')}</Badge>;
+    return <Badge variant="default">{t('patient.statusInactive')}</Badge>;
+  };
 
   useEffect(() => {
     dispatch(fetchPatients());
@@ -86,7 +88,7 @@ export function PatientsListPage() {
   const handleEditSave = async () => {
     if (!editPatient) return;
     if (!form.name.trim()) {
-      showSnackbar('Patient name is required', 'error');
+      showSnackbar(t('patient.nameRequired'), 'error');
       return;
     }
     try {
@@ -96,9 +98,9 @@ export function PatientsListPage() {
       })).unwrap();
       setEditPatient(null);
       setForm(emptyForm);
-      showSnackbar('Patient updated successfully', 'success');
+      showSnackbar(t('patient.updatedSuccess'), 'success');
     } catch {
-      showSnackbar('Failed to update patient', 'error');
+      showSnackbar(t('patient.updateFailed'), 'error');
     }
   };
 
@@ -107,16 +109,16 @@ export function PatientsListPage() {
       try {
         await dispatch(deletePatient(deleteId)).unwrap();
         setDeleteId(null);
-        showSnackbar('Patient deleted successfully', 'success');
+        showSnackbar(t('patient.deletedSuccess'), 'success');
       } catch {
-        showSnackbar('Failed to delete patient', 'error');
+        showSnackbar(t('patient.deleteFailed'), 'error');
       }
     }
   };
 
   const handleCreate = async () => {
     if (!form.name.trim()) {
-      showSnackbar('Patient name is required', 'error');
+      showSnackbar(t('patient.nameRequired'), 'error');
       return;
     }
     try {
@@ -134,9 +136,9 @@ export function PatientsListPage() {
       })).unwrap();
       setShowCreate(false);
       setForm(emptyForm);
-      showSnackbar('Patient created successfully', 'success');
+      showSnackbar(t('patient.createdSuccess'), 'success');
     } catch {
-      showSnackbar('Failed to create patient', 'error');
+      showSnackbar(t('patient.createFailed'), 'error');
     }
   };
 
@@ -147,7 +149,7 @@ export function PatientsListPage() {
   const columns = [
     {
       key: 'name',
-      header: 'NAME',
+      header: t('patient.name'),
       sortable: true,
       render: (p: Patient) => (
         <div className="flex items-center gap-3">
@@ -158,18 +160,18 @@ export function PatientsListPage() {
         </div>
       ),
     },
-    { key: 'dni', header: 'NATIONAL ID' },
-    { key: 'healthInsurance', header: 'HEALTH INSURANCE' },
-    { key: 'memberNumber', header: 'MEMBER #' },
-    { key: 'phone', header: 'PHONE' },
+    { key: 'dni', header: t('patient.nationalId') },
+    { key: 'healthInsurance', header: t('patient.healthInsurance') },
+    { key: 'memberNumber', header: t('patient.memberNumber') },
+    { key: 'phone', header: t('patient.phone') },
     {
       key: 'createdAt',
-      header: 'CREATED DATE',
+      header: t('patient.createdDate'),
       render: (p: Patient) => formatDate(p.createdAt),
     },
     {
       key: 'notes',
-      header: 'NOTES',
+      header: t('patient.notes'),
       render: (p: Patient) => {
         if (!p.notes) return <span className="text-gray-400">{'\u2014'}</span>;
         const lines = p.notes.split('\n').filter(Boolean);
@@ -178,7 +180,7 @@ export function PatientsListPage() {
             content={
               <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                  Notes
+                  {t('patient.notes')}
                 </p>
                 {lines.length > 1 ? (
                   <ul className="space-y-1">
@@ -201,12 +203,12 @@ export function PatientsListPage() {
     },
     {
       key: 'status',
-      header: 'CLIENT STATUS',
+      header: t('patient.clientStatus'),
       render: (p: Patient) => statusBadge(p.status),
     },
     {
       key: 'actions',
-      header: 'ACTIONS',
+      header: t('patient.actions'),
       render: (p: Patient) => (
         <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
           <button onClick={() => handleView(p)} className="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 transition-colors">
@@ -227,12 +229,12 @@ export function PatientsListPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Patients</h1>
-          <p className="text-sm text-gray-500 mt-1">{filteredPatients.length} total patients</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('patient.title')}</h1>
+          <p className="text-sm text-gray-500 mt-1">{t('patient.totalPatients', { count: filteredPatients.length })}</p>
         </div>
         <Button onClick={() => setShowCreate(true)}>
           <PlusIcon className="h-4 w-4" />
-          New Patient
+          {t('patient.newPatient')}
         </Button>
       </div>
 
@@ -241,7 +243,7 @@ export function PatientsListPage() {
           <div className="relative w-full">
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Search by name, DNI, phone, or member #..."
+              placeholder={t('patient.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => {
                 dispatch(setSearchQuery(e.target.value));
@@ -252,7 +254,7 @@ export function PatientsListPage() {
           </div>
           <Select
             options={statusOptions}
-            placeholder="All Statuses"
+            placeholder={t('patient.allStatuses')}
             value={statusFilter}
             onChange={(e) => {
               dispatch(setStatusFilter(e.target.value));
@@ -269,25 +271,25 @@ export function PatientsListPage() {
           page={page}
           totalPages={totalPages}
           onPageChange={setPage}
-          emptyMessage="No patients found matching your search."
+          emptyMessage={t('patient.noPatientsFound')}
         />
       </Card>
 
       <Dialog
         open={!!deleteId}
         onClose={() => setDeleteId(null)}
-        title="Delete Patient"
+        title={t('patient.deletePatient')}
         size="sm"
       >
         <p className="text-sm text-gray-600 mb-4">
-          Are you sure you want to delete this patient? This action cannot be undone.
+          {t('patient.deleteConfirm')}
         </p>
         <div className="flex justify-end gap-3">
           <Button variant="secondary" onClick={() => setDeleteId(null)}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button variant="danger" onClick={handleDelete}>
-            Delete
+            {t('common.delete')}
           </Button>
         </div>
       </Dialog>
@@ -295,73 +297,73 @@ export function PatientsListPage() {
       <Dialog
         open={!!editPatient}
         onClose={() => { setEditPatient(null); setForm(emptyForm); }}
-        title="Edit Patient"
+        title={t('patient.editPatient')}
         size="md"
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('patient.fullName')}</label>
             <Input
-              placeholder="Patient full name"
+              placeholder={t('patient.fullNamePlaceholder')}
               value={form.name}
               onChange={(e) => updateForm('name', e.target.value)}
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">National ID</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('patient.nationalId')}</label>
               <Input
-                placeholder="e.g. 45.678.901"
+                placeholder={t('patient.dniPlaceholder')}
                 value={form.dni}
                 onChange={(e) => updateForm('dni', e.target.value)}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('patient.phone')}</label>
               <Input
-                placeholder="e.g. +52 55 1234 5678"
+                placeholder={t('patient.phonePlaceholder')}
                 value={form.phone}
                 onChange={(e) => updateForm('phone', e.target.value)}
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('patient.email')}</label>
             <Input
-              placeholder="patient@email.com"
+              placeholder={t('patient.emailPlaceholder')}
               type="email"
               value={form.email}
               onChange={(e) => updateForm('email', e.target.value)}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('patient.address')}</label>
             <Input
-              placeholder="e.g. Av. Corrientes 1234"
+              placeholder={t('patient.addressPlaceholder')}
               value={form.address}
               onChange={(e) => updateForm('address', e.target.value)}
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Health Insurance</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('patient.healthInsurance')}</label>
               <Input
-                placeholder="e.g. IMSS, ISSSTE"
+                placeholder={t('patient.insurancePlaceholder')}
                 value={form.healthInsurance}
                 onChange={(e) => updateForm('healthInsurance', e.target.value)}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Member #</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('patient.memberNumber')}</label>
               <Input
-                placeholder="Insurance member number"
+                placeholder={t('patient.memberPlaceholder')}
                 value={form.memberNumber}
                 onChange={(e) => updateForm('memberNumber', e.target.value)}
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('patient.status')}</label>
             <Select
               options={statusOptions}
               value={form.status}
@@ -370,9 +372,9 @@ export function PatientsListPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('patient.notes')}</label>
             <Input
-              placeholder="Optional notes"
+              placeholder={t('patient.notesPlaceholder')}
               value={form.notes}
               onChange={(e) => updateForm('notes', e.target.value)}
             />
@@ -380,10 +382,10 @@ export function PatientsListPage() {
         </div>
         <div className="flex justify-end gap-3 mt-6">
           <Button variant="secondary" onClick={() => { setEditPatient(null); setForm(emptyForm); }}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleEditSave}>
-            Save Changes
+            {t('common.save')}
           </Button>
         </div>
       </Dialog>
@@ -391,73 +393,73 @@ export function PatientsListPage() {
       <Dialog
         open={showCreate}
         onClose={() => { setShowCreate(false); setForm(emptyForm); }}
-        title="New Patient"
+        title={t('patient.newPatient')}
         size="md"
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('patient.fullName')}</label>
             <Input
-              placeholder="Patient full name"
+              placeholder={t('patient.fullNamePlaceholder')}
               value={form.name}
               onChange={(e) => updateForm('name', e.target.value)}
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">National ID</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('patient.nationalId')}</label>
               <Input
-                placeholder="e.g. 45.678.901"
+                placeholder={t('patient.dniPlaceholder')}
                 value={form.dni}
                 onChange={(e) => updateForm('dni', e.target.value)}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('patient.phone')}</label>
               <Input
-                placeholder="e.g. +52 55 1234 5678"
+                placeholder={t('patient.phonePlaceholder')}
                 value={form.phone}
                 onChange={(e) => updateForm('phone', e.target.value)}
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('patient.email')}</label>
             <Input
-              placeholder="patient@email.com"
+              placeholder={t('patient.emailPlaceholder')}
               type="email"
               value={form.email}
               onChange={(e) => updateForm('email', e.target.value)}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('patient.address')}</label>
             <Input
-              placeholder="e.g. Av. Corrientes 1234"
+              placeholder={t('patient.addressPlaceholder')}
               value={form.address}
               onChange={(e) => updateForm('address', e.target.value)}
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Health Insurance</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('patient.healthInsurance')}</label>
               <Input
-                placeholder="e.g. IMSS, ISSSTE"
+                placeholder={t('patient.insurancePlaceholder')}
                 value={form.healthInsurance}
                 onChange={(e) => updateForm('healthInsurance', e.target.value)}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Member #</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('patient.memberNumber')}</label>
               <Input
-                placeholder="Insurance member number"
+                placeholder={t('patient.memberPlaceholder')}
                 value={form.memberNumber}
                 onChange={(e) => updateForm('memberNumber', e.target.value)}
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('patient.status')}</label>
             <Select
               options={statusOptions}
               value={form.status}
@@ -466,9 +468,9 @@ export function PatientsListPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('patient.notes')}</label>
             <Input
-              placeholder="Optional notes"
+              placeholder={t('patient.notesPlaceholder')}
               value={form.notes}
               onChange={(e) => updateForm('notes', e.target.value)}
             />
@@ -476,10 +478,10 @@ export function PatientsListPage() {
         </div>
         <div className="flex justify-end gap-3 mt-6">
           <Button variant="secondary" onClick={() => { setShowCreate(false); setForm(emptyForm); }}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleCreate}>
-            Create Patient
+            {t('patient.createPatient')}
           </Button>
         </div>
       </Dialog>

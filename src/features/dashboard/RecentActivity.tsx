@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardHeader, CardTitle, Badge } from '@/components/ui';
 import { useAppSelector } from '@/store/hooks';
 import { formatDate } from '@/utils';
@@ -13,12 +14,13 @@ const categoryConfig: Record<ContactCategory, { icon: React.ElementType; color: 
 };
 
 export function RecentActivity() {
+  const { t } = useTranslation();
   const contacts = useAppSelector((state) => state.contacts.contacts).slice(0, 5);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Contacts</CardTitle>
+        <CardTitle>{t('dashboard.recentContacts')}</CardTitle>
       </CardHeader>
       <div className="space-y-4">
         {contacts.map((contact) => {

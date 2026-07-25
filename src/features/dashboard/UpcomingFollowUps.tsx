@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Card, CardHeader, CardTitle, Badge } from '@/components/ui';
 import { useAppSelector } from '@/store/hooks';
 import { formatDate, statusLabels, statusColors } from '@/utils';
@@ -11,6 +12,7 @@ function getLatestOrder(list: Order[]): Order | null {
 }
 
 export function UpcomingFollowUps() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const followUps = useAppSelector((state) => state.followups.followUps)
     .filter((f) => f.status !== 'delivered')
@@ -35,16 +37,16 @@ export function UpcomingFollowUps() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Upcoming Follow-Ups</CardTitle>
+        <CardTitle>{t('dashboard.upcomingFollowUps')}</CardTitle>
       </CardHeader>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-gray-500 text-xs uppercase">
-              <th className="pb-2 font-medium">Patient</th>
-              <th className="pb-2 font-medium">Medication</th>
-              <th className="pb-2 font-medium">Date</th>
-              <th className="pb-2 font-medium">Status</th>
+              <th className="pb-2 font-medium">{t('followUp.patient')}</th>
+              <th className="pb-2 font-medium">{t('followUp.medication')}</th>
+              <th className="pb-2 font-medium">{t('followUp.date')}</th>
+              <th className="pb-2 font-medium">{t('followUp.status')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { login } from './authSlice';
 import { Button, Input, Card } from '@/components/ui';
@@ -15,6 +16,7 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 export function LoginPage() {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { isAuthenticated, loading, error } = useAppSelector((state) => state.auth);
@@ -45,13 +47,13 @@ export function LoginPage() {
             <span className="text-white font-bold text-xl">PC</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">PharmaCare CRM</h1>
-          <p className="text-sm text-gray-500 mt-1">Sign in to your account</p>
+          <p className="text-sm text-gray-500 mt-1">{t('auth.signIn')}</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Input
             id="email"
-            label="Email"
+            label={t('auth.email')}
             type="email"
             placeholder="admin@pharmacare.com"
             error={errors.email?.message}
@@ -60,7 +62,7 @@ export function LoginPage() {
 
           <Input
             id="password"
-            label="Password"
+            label={t('auth.password')}
             type="password"
             placeholder="Enter your password"
             error={errors.password?.message}
@@ -72,12 +74,12 @@ export function LoginPage() {
           )}
 
           <Button type="submit" loading={loading} className="w-full" size="lg">
-            Sign In
+            {t('auth.signInButton')}
           </Button>
         </form>
 
         <p className="text-center text-xs text-gray-400 mt-6">
-          Demo: admin@pharmacare.com / PharmaCare2026
+          {t('auth.demoCredentials')}
         </p>
       </Card>
     </div>

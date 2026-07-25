@@ -2,7 +2,7 @@ import { Bars3Icon, BellIcon } from '@heroicons/react/24/outline';
 import { useAppSelector } from '@/store/hooks';
 import { selectUnreadCount } from '@/features/notifications/notificationsSlice';
 import { useNavigate } from 'react-router-dom';
-import { cn } from '@/utils';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 interface HeaderProps {
   onMenuToggle: () => void;
@@ -25,6 +25,8 @@ export function Header({ onMenuToggle }: HeaderProps) {
       <div className="hidden lg:block" />
 
       <div className="flex items-center gap-4">
+        <LanguageSwitcher />
+
         <button
           onClick={() => navigate('/notifications')}
           className="relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
