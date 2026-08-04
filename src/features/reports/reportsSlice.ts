@@ -20,7 +20,7 @@ export const selectReportsData = (state: any): ReportsData => {
   const activePatients = patients.filter((p: any) => p.status === 'active').length;
   const activeOrders = orders.length;
   const overduePatients = followUps.filter(
-    (f: any) => f.scheduledDate < today && f.status !== 'delivered',
+    (f: any) => f.scheduledDate < today && f.status !== 'delivered' && f.status !== 'cancelled',
   ).length;
 
   const monthlyFollowUps = Array.from({ length: 6 }, (_, i) => {

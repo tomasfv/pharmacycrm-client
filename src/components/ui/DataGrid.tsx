@@ -5,6 +5,7 @@ interface Column<T> {
   key: string;
   header: string;
   sortable?: boolean;
+  sortAccessor?: (item: T) => string | number | null;
   render?: (item: T) => React.ReactNode;
 }
 
@@ -45,8 +46,12 @@ export function DataGrid<T extends Record<string, any>>({
 
   const sortedData = [...data].sort((a, b) => {
     if (!sortKey) return 0;
-    const aVal = a[sortKey];
-    const bVal = b[sortKey];
+    const col = columns.find((c) => c.key === sortKey);
+    const aVal = col?.sortAccessor ? col.sortAccessor(a) : a[sortKey];
+    const bVal = col?.sortAccessor ? col.sortAccessor(b) : b[sortKey];
+    if (aVal == null && bVal == null) return 0;
+    if (aVal == null) return 1;
+    if (bVal == null) return -1;
     if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
     if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
     return 0;

@@ -201,6 +201,11 @@ export function FollowUpTable() {
     {
       key: 'lastPickupDate',
       header: t('followUp.lastPickup'),
+      sortable: true,
+      sortAccessor: (f: FollowUp) => {
+        const rx = orders.find((o) => o.id === f.orderId);
+        return rx?.lastPickupDate ?? null;
+      },
       render: (f: FollowUp) => (
         <span className="text-gray-700">{getPickupDates(f).lastPickup}</span>
       ),
@@ -208,6 +213,11 @@ export function FollowUpTable() {
     {
       key: 'nextPickupDate',
       header: t('followUp.nextPickup'),
+      sortable: true,
+      sortAccessor: (f: FollowUp) => {
+        const rx = orders.find((o) => o.id === f.orderId);
+        return rx?.nextPickupDate ?? null;
+      },
       render: (f: FollowUp) => (
         <span className="text-gray-700">{getPickupDates(f).nextPickup}</span>
       ),
@@ -264,6 +274,7 @@ export function FollowUpTable() {
     {
       key: 'status',
       header: t('followUp.status'),
+      sortable: true,
       render: (f: FollowUp) => (
         <StatusDropdown
           value={f.status}
