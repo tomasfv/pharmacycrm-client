@@ -18,7 +18,12 @@ export const selectReportsData = (state: any): ReportsData => {
   const today = getLocalDateString();
 
   const activePatients = patients.filter((p: any) => p.status === 'active').length;
-  const activeOrders = orders.length;
+  const cancelledOrderIds = new Set(
+    followUps
+      .filter((f: any) => f.status === 'cancelled' && f.orderId)
+      .map((f: any) => f.orderId),
+  );
+  const activeOrders = orders.filter((o: any) => !cancelledOrderIds.has(o.id)).length;
   const overduePatients = followUps.filter(
     (f: any) => f.scheduledDate < today && f.status !== 'delivered' && f.status !== 'cancelled',
   ).length;
