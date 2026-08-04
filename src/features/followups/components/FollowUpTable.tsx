@@ -150,8 +150,8 @@ export function FollowUpTable() {
       ? orders.find((o) => o.id === f.orderId)
       : null;
     return {
-      lastPickup: rx ? formatDate(rx.lastPickupDate) : '\u2014',
-      nextPickup: rx ? formatDate(rx.nextPickupDate) : '\u2014',
+      lastPickup: rx && rx.lastPickupDate ? formatDate(rx.lastPickupDate) : '\u2014',
+      nextPickup: rx && rx.nextPickupDate ? formatDate(rx.nextPickupDate) : '\u2014',
     };
   };
 

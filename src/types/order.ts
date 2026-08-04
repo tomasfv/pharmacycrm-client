@@ -9,8 +9,8 @@ export interface Order {
   patientId: string;
   patientName: string;
   medications: OrderMedication[];
-  lastPickupDate: string;
-  nextPickupDate: string;
+  lastPickupDate: string | null;
+  nextPickupDate: string | null;
   notes?: string;
   createdAt: string;
   updatedAt: string;

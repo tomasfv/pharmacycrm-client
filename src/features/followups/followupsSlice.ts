@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import { followupsApi } from '@/api/followups';
+import { fetchOrders } from '@/features/orders/ordersSlice';
 import type { FollowUp, FollowUpStatus } from '@/types';
 
 interface FollowUpsState {
@@ -36,9 +37,12 @@ export const fetchFollowUps = createAsyncThunk(
 
 export const moveFollowUp = createAsyncThunk(
   'followups/move',
-  async ({ followUpId, newStatus }: { followUpId: string; newStatus: FollowUpStatus }, { rejectWithValue }) => {
+  async ({ followUpId, newStatus }: { followUpId: string; newStatus: FollowUpStatus }, { dispatch, rejectWithValue }) => {
     try {
       const { data } = await followupsApi.update(followUpId, { status: newStatus } as any);
+      if (newStatus === 'delivered') {
+        dispatch(fetchOrders());
+      }
       return data.data as FollowUp;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || 'Failed to update follow-up');

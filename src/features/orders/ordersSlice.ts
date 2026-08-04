@@ -28,7 +28,7 @@ export const fetchOrders = createAsyncThunk<Order[], string | undefined>(
 
 export const addOrder = createAsyncThunk(
   'orders/addOrder',
-  async (orderData: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>, { rejectWithValue }) => {
+  async (orderData: Omit<Order, 'id' | 'createdAt' | 'updatedAt' | 'lastPickupDate' | 'nextPickupDate'> & Partial<Pick<Order, 'lastPickupDate' | 'nextPickupDate'>>, { rejectWithValue }) => {
     try {
       const { data } = await ordersApi.create(orderData as Record<string, unknown>);
       return data.data as Order;

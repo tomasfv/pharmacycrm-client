@@ -6,7 +6,7 @@ import { fetchOrders, addOrder, updateOrder } from '@/features/orders/ordersSlic
 import { fetchMedications, selectMedicationOptions, addMedication } from '@/features/medications/medicationsSlice';
 import { fetchFollowUps } from '@/features/followups/followupsSlice';
 import { Card, CardHeader, CardTitle, Badge, Button, Tabs, Dialog, Input, DropdownSelect } from '@/components/ui';
-import { formatDate, statusLabels, statusColors, getLocalDateString, getLocalDateDaysFromNow } from '@/utils';
+import { formatDate, statusLabels, statusColors } from '@/utils';
 import { ArrowLeftIcon, UserIcon, DocumentTextIcon, CubeIcon, ArrowPathIcon, PlusIcon, XMarkIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
 import { useSnackbar } from '@/components/ui';
 import type { Order, OrderMedication, FollowUpStatus } from '@/types';
@@ -70,7 +70,7 @@ function buildTimeline(
     });
     events.push({
       id: `evt-rx-pickup-${rx.id}`,
-      date: rx.lastPickupDate,
+      date: rx.lastPickupDate ?? rx.createdAt,
       sortDate: rx.createdAt,
       type: 'order_pickup',
       description: t('order.pickedUpWithMedications', { names }),
@@ -234,8 +234,6 @@ export function PatientDetailPage() {
           patientName: patient.name,
           medications,
           notes: rxNotes.trim() || undefined,
-          lastPickupDate: getLocalDateString(),
-          nextPickupDate: getLocalDateDaysFromNow(30),
         })).unwrap();
         dispatch(fetchFollowUps());
         showSnackbar(t('order.createdSuccess'), 'success');
@@ -389,8 +387,8 @@ export function PatientDetailPage() {
                           ))}
                         </div>
                       </td>
-                      <td className="py-3 pr-4 text-gray-600 whitespace-nowrap">{formatDate(rx.lastPickupDate)}</td>
-                      <td className="py-3 pr-4 text-gray-600 whitespace-nowrap">{formatDate(rx.nextPickupDate)}</td>
+                      <td className="py-3 pr-4 text-gray-600 whitespace-nowrap">{rx.lastPickupDate ? formatDate(rx.lastPickupDate) : '\u2014'}</td>
+                      <td className="py-3 pr-4 text-gray-600 whitespace-nowrap">{rx.nextPickupDate ? formatDate(rx.nextPickupDate) : '\u2014'}</td>
                       <td className="py-3 pr-4 text-gray-600 whitespace-nowrap text-sm">{rx.notes || <span className="text-gray-400">{'\u2014'}</span>}</td>
                       <td className="py-3">
                         <button onClick={() => handleEditRx(rx)} className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
