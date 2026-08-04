@@ -27,6 +27,7 @@ function StatusDropdown({
     'order_received',
     'prepared',
     'delivered',
+    'cancelled',
   ];
 
   useEffect(() => {

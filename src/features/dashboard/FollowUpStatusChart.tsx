@@ -4,7 +4,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recha
 import { useAppSelector } from '@/store/hooks';
 import { statusLabels } from '@/utils';
 
-const COLORS = ['#EAB308', '#3B82F6', '#A855F7', '#F97316', '#22C55E'];
+const COLORS = ['#EAB308', '#3B82F6', '#A855F7', '#F97316', '#22C55E', '#EF4444'];
 
 export function FollowUpStatusChart() {
   const { t } = useTranslation();

@@ -3,7 +3,8 @@ export type FollowUpStatus =
   | 'contacted'
   | 'order_received'
   | 'prepared'
-  | 'delivered';
+  | 'delivered'
+  | 'cancelled';
 
 export type PatientStatus = 'active' | 'inactive';
 

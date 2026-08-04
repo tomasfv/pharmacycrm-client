@@ -38,7 +38,7 @@ export const selectReportsData = (state: any): ReportsData => {
   });
 
   const statuses: FollowUpStatus[] = [
-    'pending_contact', 'contacted', 'order_received', 'prepared', 'delivered',
+    'pending_contact', 'contacted', 'order_received', 'prepared', 'delivered', 'cancelled',
   ];
   const statusDistribution = statuses.map((status) => ({
     status,

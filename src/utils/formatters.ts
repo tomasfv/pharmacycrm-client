@@ -6,6 +6,7 @@ export const statusLabels: Record<FollowUpStatus, string> = {
   order_received: 'Order Received',
   prepared: 'Prepared',
   delivered: 'Delivered',
+  cancelled: 'Cancelled',
 };
 
 export const statusColors: Record<FollowUpStatus, string> = {
@@ -14,6 +15,7 @@ export const statusColors: Record<FollowUpStatus, string> = {
   order_received: 'bg-purple-100 text-purple-800',
   prepared: 'bg-orange-100 text-orange-800',
   delivered: 'bg-primary-100 text-primary-800',
+  cancelled: 'bg-red-100 text-red-800',
 };
 
 export function getInitials(name: string): string {

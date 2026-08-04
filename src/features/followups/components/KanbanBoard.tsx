@@ -13,6 +13,7 @@ const columns: FollowUpStatus[] = [
   'order_received',
   'prepared',
   'delivered',
+  'cancelled',
 ];
 
 const columnIcons: Record<FollowUpStatus, string> = {
@@ -21,6 +22,7 @@ const columnIcons: Record<FollowUpStatus, string> = {
   order_received: '\uD83D\uDCC4',
   prepared: '\uD83D\uDCE6',
   delivered: '\u2705',
+  cancelled: '\u274C',
 };
 
 export function KanbanBoard() {

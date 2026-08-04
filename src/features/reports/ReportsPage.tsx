@@ -22,7 +22,7 @@ import {
 import { statusLabels } from '@/utils';
 import { UserGroupIcon, BeakerIcon, ExclamationTriangleIcon, CalendarDaysIcon } from '@heroicons/react/24/outline';
 
-const COLORS = ['#EAB308', '#3B82F6', '#A855F7', '#F97316', '#22C55E'];
+const COLORS = ['#EAB308', '#3B82F6', '#A855F7', '#F97316', '#22C55E', '#EF4444'];
 
 function StatCard({ title, value, icon: Icon, color }: { title: string; value: number; icon: React.ElementType; color: string }) {
   return (
