@@ -311,7 +311,7 @@ const es = {
     activePatients: "Pacientes Activos",
     activeOrders: "Órdenes Activas",
     overduePatients: "Seguimientos Vencidos",
-    monthlyFollowUps: "Seguimientos Mensuales",
+    monthlyPatients: "Pacientes Mensuales",
     followUpStatusDistribution: "Distribución de Estados de Seguimiento",
   },
   activity: {

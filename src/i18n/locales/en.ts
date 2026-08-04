@@ -310,7 +310,7 @@ const en = {
     activePatients: "Active Patients",
     activeOrders: "Active Orders",
     overduePatients: "Overdue Follow-ups",
-    monthlyFollowUps: "Monthly Follow-ups",
+    monthlyPatients: "Monthly Patients",
     followUpStatusDistribution: "Follow-Up Status Distribution",
   },
   activity: {
