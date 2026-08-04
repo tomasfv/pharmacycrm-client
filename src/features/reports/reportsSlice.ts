@@ -23,11 +23,16 @@ export const selectReportsData = (state: any): ReportsData => {
     (f: any) => f.scheduledDate < today && f.status !== 'delivered',
   ).length;
 
-  const monthlyFollowUps = months.slice(0, 6).map((month, idx) => {
-    const m = String(idx + 1).padStart(2, '0');
+  const monthlyFollowUps = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() - (5 - i));
+    const year = d.getFullYear();
+    const monthIdx = d.getMonth();
+    const month = months[monthIdx];
     const count = followUps.filter((f: any) => {
-      const d = new Date(f.createdAt);
-      return d.getMonth() === idx;
+      const fd = new Date(f.createdAt);
+      return fd.getFullYear() === year && fd.getMonth() === monthIdx;
     }).length;
     return { month, count };
   });
