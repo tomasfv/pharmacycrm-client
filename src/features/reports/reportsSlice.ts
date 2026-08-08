@@ -24,9 +24,11 @@ export const selectReportsData = (state: any): ReportsData => {
       .map((f: any) => f.orderId),
   );
   const activeOrders = orders.filter((o: any) => !cancelledOrderIds.has(o.id)).length;
-  const overduePatients = followUps.filter(
-    (f: any) => f.scheduledDate < today && f.status !== 'delivered' && f.status !== 'cancelled',
-  ).length;
+  const overduePatients = followUps.filter((f: any) => {
+    if (f.status === 'delivered' || f.status === 'cancelled') return false;
+    const order = orders.find((o: any) => o.id === f.orderId);
+    return !!order && !!order.nextPickupDate && order.nextPickupDate < today;
+  }).length;
 
   const monthlyPatients = Array.from({ length: 6 }, (_, i) => {
     const d = new Date();
