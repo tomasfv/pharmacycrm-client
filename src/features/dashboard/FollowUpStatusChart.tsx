@@ -2,9 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Card, CardHeader, CardTitle } from '@/components/ui';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { useAppSelector } from '@/store/hooks';
-import { statusLabels } from '@/utils';
-
-const COLORS = ['#EAB308', '#3B82F6', '#A855F7', '#F97316', '#22C55E', '#EF4444'];
+import { statusLabels, statusChartColors } from '@/utils';
 
 export function FollowUpStatusChart() {
   const { t } = useTranslation();
@@ -19,6 +17,7 @@ export function FollowUpStatusChart() {
   );
 
   const data = Object.entries(statusCounts).map(([status, count]) => ({
+    status,
     name: statusLabels[status as keyof typeof statusLabels] || status,
     value: count,
   }));
@@ -40,8 +39,8 @@ export function FollowUpStatusChart() {
               paddingAngle={3}
               dataKey="value"
             >
-              {data.map((_, idx) => (
-                <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+              {data.map((d) => (
+                <Cell key={d.status} fill={statusChartColors[d.status as keyof typeof statusChartColors]} />
               ))}
             </Pie>
             <Tooltip />

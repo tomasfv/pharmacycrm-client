@@ -19,10 +19,8 @@ import {
   Cell,
   Legend,
 } from 'recharts';
-import { statusLabels } from '@/utils';
+import { statusLabels, statusChartColors } from '@/utils';
 import { UserGroupIcon, BeakerIcon, ExclamationTriangleIcon, CalendarDaysIcon } from '@heroicons/react/24/outline';
-
-const COLORS = ['#EAB308', '#3B82F6', '#A855F7', '#F97316', '#22C55E', '#EF4444'];
 
 function StatCard({ title, value, icon: Icon, color }: { title: string; value: number; icon: React.ElementType; color: string }) {
   return (
@@ -99,8 +97,8 @@ export function ReportsPage() {
                   nameKey="status"
                   label={({ status }) => statusLabels[status as keyof typeof statusLabels]}
                 >
-                  {data.statusDistribution.map((_, idx) => (
-                    <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                  {data.statusDistribution.map((d) => (
+                    <Cell key={d.status} fill={statusChartColors[d.status as keyof typeof statusChartColors]} />
                   ))}
                 </Pie>
                 <Tooltip />

@@ -18,6 +18,15 @@ export const statusColors: Record<FollowUpStatus, string> = {
   cancelled: 'bg-red-100 text-red-800',
 };
 
+export const statusChartColors: Record<FollowUpStatus, string> = {
+  pending_contact: '#EAB308',
+  contacted: '#3B82F6',
+  order_received: '#A855F7',
+  prepared: '#F97316',
+  delivered: '#22C55E',
+  cancelled: '#EF4444',
+};
+
 export function getInitials(name: string): string {
   return name
     .split(' ')
