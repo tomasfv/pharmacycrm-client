@@ -47,6 +47,7 @@ describe('selectReportsData', () => {
     expect(result.activePatients).toBe(2);
     expect(result.activeOrders).toBe(6);
     expect(result.overduePatients).toBe(2);
+    expect(result.patientsThisMonth).toBe(2);
     expect(result.statusDistribution).toEqual([
       { status: 'pending_contact', count: 1 },
       { status: 'contacted', count: 1 },

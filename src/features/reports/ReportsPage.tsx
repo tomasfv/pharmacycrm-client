@@ -62,7 +62,7 @@ export function ReportsPage() {
         <StatCard title={t('report.activePatients')} value={data.activePatients} icon={UserGroupIcon} color="bg-primary-600" />
         <StatCard title={t('report.activeOrders')} value={data.activeOrders} icon={BeakerIcon} color="bg-blue-600" />
         <StatCard title={t('report.overduePatients')} value={data.overduePatients} icon={ExclamationTriangleIcon} color="bg-red-600" />
-        <StatCard title={t('report.monthlyPatients')} value={data.monthlyPatients.reduce((a, b) => a + b.count, 0)} icon={CalendarDaysIcon} color="bg-purple-600" />
+        <StatCard title={t('report.patientsThisMonth')} value={data.patientsThisMonth} icon={CalendarDaysIcon} color="bg-purple-600" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

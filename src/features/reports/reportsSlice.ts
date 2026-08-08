@@ -6,6 +6,7 @@ interface ReportsData {
   activeOrders: number;
   overduePatients: number;
   monthlyPatients: { month: string; count: number }[];
+  patientsThisMonth: number;
   statusDistribution: { status: FollowUpStatus; count: number }[];
 }
 
@@ -44,6 +45,12 @@ export const selectReportsData = (state: any): ReportsData => {
     return { month, count };
   });
 
+  const now = new Date();
+  const patientsThisMonth = patients.filter((p: any) => {
+    const pd = new Date(p.createdAt);
+    return pd.getFullYear() === now.getFullYear() && pd.getMonth() === now.getMonth();
+  }).length;
+
   const statuses: FollowUpStatus[] = [
     'pending_contact', 'contacted', 'order_received', 'prepared', 'delivered', 'cancelled',
   ];
@@ -52,7 +59,7 @@ export const selectReportsData = (state: any): ReportsData => {
     count: followUps.filter((f: any) => f.status === status).length,
   }));
 
-  return { activePatients, activeOrders, overduePatients, monthlyPatients, statusDistribution };
+  return { activePatients, activeOrders, overduePatients, monthlyPatients, patientsThisMonth, statusDistribution };
 };
 
 const reportsSlice: any = {

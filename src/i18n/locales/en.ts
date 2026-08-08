@@ -311,6 +311,7 @@ const en = {
     activeOrders: "Active Orders",
     overduePatients: "Overdue Follow-ups",
     monthlyPatients: "Monthly Patients",
+    patientsThisMonth: "Patients This Month",
     followUpStatusDistribution: "Follow-Up Status Distribution",
   },
   activity: {
