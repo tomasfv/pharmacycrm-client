@@ -1,5 +1,7 @@
 # PharmaCare CRM
 
+![CI](https://github.com/tomasfv/pharmacycrm-client/actions/workflows/ci.yml/badge.svg)
+
 A full-stack pharmacy CRM for chronic patient follow-up and treatment renewal management. Built for small to medium pharmacies that need to track prescriptions, schedule follow-ups, and manage patient communications — no billing, inventory, or accounting.
 
 ---
