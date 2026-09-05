@@ -5,23 +5,17 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchOrders, addOrder, updateOrder } from '@/features/orders/ordersSlice';
 import { fetchMedications, selectMedicationOptions, addMedication } from '@/features/medications/medicationsSlice';
 import { fetchFollowUps } from '@/features/followups/followupsSlice';
+import { fetchActivityLogs, clearLogs } from '@/features/activityLogs/activityLogsSlice';
 import { Card, CardHeader, CardTitle, Badge, Button, Tabs, Dialog, Input, DropdownSelect } from '@/components/ui';
 import { formatDate, statusLabels, statusColors } from '@/utils';
 import { ArrowLeftIcon, UserIcon, DocumentTextIcon, CubeIcon, ArrowPathIcon, PlusIcon, XMarkIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
 import { useSnackbar } from '@/components/ui';
 import type { Order, OrderMedication, FollowUpStatus } from '@/types';
+import type { ActivityLog } from '@/types/activityLog';
 
 type TabId = 'info' | 'orders' | 'history';
 
-interface ActivityEvent {
-  id: string;
-  date: string;
-  sortDate: string;
-  type: 'patient_created' | 'order_issued' | 'order_pickup' | 'follow_up';
-  description: string;
-  details?: string;
-  status?: string;
-}
+type ActivityType = ActivityLog['type'];
 
 interface MedicationRow {
   medicationId: string;
@@ -29,70 +23,19 @@ interface MedicationRow {
   quantity: string;
 }
 
-const eventIcons: Record<ActivityEvent['type'], React.ElementType> = {
-  patient_created: UserIcon,
-  order_issued: DocumentTextIcon,
-  order_pickup: CubeIcon,
-  follow_up: ArrowPathIcon,
+const eventIcons: Record<ActivityType, React.ElementType> = {
+  patient_registered: UserIcon,
+  order_created: DocumentTextIcon,
+  order_picked_up: CubeIcon,
+  follow_up_status_changed: ArrowPathIcon,
 };
 
-const eventColors: Record<ActivityEvent['type'], string> = {
-  patient_created: 'bg-green-100 text-green-600',
-  order_issued: 'bg-blue-100 text-blue-600',
-  order_pickup: 'bg-amber-100 text-amber-600',
-  follow_up: 'bg-purple-100 text-purple-600',
+const eventColors: Record<ActivityType, string> = {
+  patient_registered: 'bg-green-100 text-green-600',
+  order_created: 'bg-blue-100 text-blue-600',
+  order_picked_up: 'bg-amber-100 text-amber-600',
+  follow_up_status_changed: 'bg-purple-100 text-purple-600',
 };
-
-function buildTimeline(
-  patient: { id: string; createdAt: string; name: string },
-  orders: Order[],
-  followUps: { id: string; scheduledDate: string; status: FollowUpStatus; notes?: string; createdAt: string }[],
-  t: (key: string, options?: Record<string, string>) => string,
-): ActivityEvent[] {
-  const events: ActivityEvent[] = [];
-
-  events.push({
-    id: 'evt-patient-created',
-    date: patient.createdAt,
-    sortDate: patient.createdAt,
-    type: 'patient_created',
-    description: t('patient.registeredInSystem'),
-  });
-
-  for (const rx of orders) {
-    const names = rx.medications.map((m) => m.medicationName).join(', ');
-    events.push({
-      id: `evt-rx-issued-${rx.id}`,
-      date: rx.createdAt,
-      sortDate: rx.createdAt,
-      type: 'order_issued',
-      description: t('order.issuedWithMedications', { names }),
-    });
-    events.push({
-      id: `evt-rx-pickup-${rx.id}`,
-      date: rx.lastPickupDate ?? rx.createdAt,
-      sortDate: rx.createdAt,
-      type: 'order_pickup',
-      description: t('order.pickedUpWithMedications', { names }),
-    });
-  }
-
-  for (const fu of followUps) {
-    const label = statusLabels[fu.status] || fu.status.replace(/_/g, ' ');
-    events.push({
-      id: `evt-fu-${fu.id}`,
-      date: fu.scheduledDate,
-      sortDate: fu.createdAt,
-      type: 'follow_up',
-      description: t('followUp.withStatus', { label }),
-      details: fu.notes || undefined,
-      status: fu.status,
-    });
-  }
-
-  events.sort((a, b) => b.sortDate.localeCompare(a.sortDate));
-  return events;
-}
 
 const emptyMedicationRow: MedicationRow = {
   medicationId: '',
@@ -116,6 +59,8 @@ export function PatientDetailPage() {
     dispatch(fetchMedications());
     dispatch(fetchOrders(id));
     dispatch(fetchFollowUps());
+    dispatch(fetchActivityLogs(id));
+    return () => { dispatch(clearLogs()); };
   }, [dispatch, id]);
   const [activeTab, setActiveTab] = useState<TabId>('info');
   const [showRxForm, setShowRxForm] = useState(false);
@@ -136,9 +81,10 @@ export function PatientDetailPage() {
     [id, allFollowUps],
   );
 
+  const activityLogs = useAppSelector((state) => state.activityLogs.logs);
   const timeline = useMemo(
-    () => (patient ? buildTimeline(patient, patientOrders, patientFollowUps, t) : []),
-    [patient, patientOrders, patientFollowUps, t],
+    () => [...activityLogs].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    [activityLogs],
   );
 
   if (!patient) {
@@ -415,28 +361,29 @@ export function PatientDetailPage() {
             <div className="relative px-1">
               <div className="absolute left-4 top-3 bottom-3 w-0.5 bg-gray-200" />
               <div className="space-y-0">
-                {timeline.map((evt) => {
-                  const Icon = eventIcons[evt.type];
+                {timeline.map((log) => {
+                  const Icon = eventIcons[log.type];
+                  const meta = log.metadata as Record<string, string> | undefined;
                   return (
-                    <div key={evt.id} className="relative flex gap-4 pb-6 last:pb-0">
+                    <div key={log.id} className="relative flex gap-4 pb-6 last:pb-0">
                       <div className="relative z-10 flex-shrink-0">
-                        <div className={`h-8 w-8 rounded-full ${eventColors[evt.type]} flex items-center justify-center`}>
+                        <div className={`h-8 w-8 rounded-full ${eventColors[log.type]} flex items-center justify-center`}>
                           <Icon className="h-4 w-4" />
                         </div>
                       </div>
                       <div className="flex-1 min-w-0 pt-0.5">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm font-medium text-gray-900">{evt.description}</p>
-                          {evt.status && (
-                            <Badge className={statusColors[evt.status as FollowUpStatus]}>
-                              {statusLabels[evt.status as FollowUpStatus]}
+                          <p className="text-sm font-medium text-gray-900">{log.description}</p>
+                          {log.type === 'follow_up_status_changed' && meta?.newStatus && (
+                            <Badge className={statusColors[meta.newStatus as FollowUpStatus]}>
+                              {statusLabels[meta.newStatus as FollowUpStatus]}
                             </Badge>
                           )}
                         </div>
-                        {evt.details && (
-                          <p className="text-sm text-gray-500 mt-0.5">{evt.details}</p>
+                        {meta?.medication && (
+                          <p className="text-sm text-gray-500 mt-0.5">{meta.medication}</p>
                         )}
-                        <p className="text-xs text-gray-400 mt-0.5">{formatDate(evt.date)}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{formatDate(log.createdAt)}</p>
                       </div>
                     </div>
                   );

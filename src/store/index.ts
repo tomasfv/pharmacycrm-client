@@ -10,6 +10,7 @@ import notificationsReducer from '@/features/notifications/notificationsSlice';
 import settingsReducer from '@/features/settings/settingsSlice';
 import medicationsReducer from '@/features/medications/medicationsSlice';
 import usersReducer from '@/features/users/usersSlice';
+import activityLogsReducer from '@/features/activityLogs/activityLogsSlice';
 
 export const store = configureStore({
   reducer: {
@@ -24,6 +25,7 @@ export const store = configureStore({
     settings: settingsReducer,
     medications: medicationsReducer,
     users: usersReducer,
+    activityLogs: activityLogsReducer,
   },
 });
 
