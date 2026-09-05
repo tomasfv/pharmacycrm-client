@@ -57,9 +57,11 @@ export function PatientDetailPage() {
 
   useEffect(() => {
     dispatch(fetchMedications());
-    dispatch(fetchOrders(id));
+    if (id) {
+      dispatch(fetchOrders(id));
+      dispatch(fetchActivityLogs(id));
+    }
     dispatch(fetchFollowUps());
-    dispatch(fetchActivityLogs(id));
     return () => { dispatch(clearLogs()); };
   }, [dispatch, id]);
   const [activeTab, setActiveTab] = useState<TabId>('info');
