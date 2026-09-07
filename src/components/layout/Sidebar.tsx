@@ -27,6 +27,7 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const unreadCount = useAppSelector(selectUnreadCount);
+  const pharmacyName = useAppSelector((state) => state.settings.general.pharmacyName);
 
   const navItems = [
     { to: "/dashboard", icon: Squares2X2Icon, label: t("nav.dashboard") },
@@ -54,11 +55,11 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
           collapsed && "-translate-x-full lg:translate-x-0",
         )}
       >
-        <div className="h-16 flex items-center justify-center 2xl:justify-start gap-2 px-4 border-b border-gray-200">
+        <div className="h-16 flex items-center justify-center 2xl:justify-start gap-2 px-4 border-b border-gray-200 overflow-hidden">
           <div className="h-8 w-8 rounded-lg bg-primary-600 flex items-center justify-center shrink-0">
-            <span className="text-white font-bold text-sm">PC</span>
+            <span className="text-white font-bold text-sm">{pharmacyName.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}</span>
           </div>
-          <span className="hidden 2xl:inline font-semibold text-gray-900">PharmaCare CRM</span>
+          <span className="hidden 2xl:inline font-semibold text-gray-900 line-clamp-2">{pharmacyName}</span>
         </div>
 
         <nav className="flex-1 py-4 px-2 2xl:px-3 space-y-1 overflow-y-auto">

@@ -338,6 +338,18 @@ const en = {
       delivered: "Delivered",
     },
   },
+  settings: {
+    title: "Settings",
+    subtitle: "Configure your pharmacy CRM",
+    generalTitle: "General Settings",
+    pharmacyName: "Pharmacy Name",
+    address: "Address",
+    phone: "Phone",
+    email: "Email",
+    timezone: "Timezone",
+    language: "Language",
+    saved: "General settings saved",
+  },
   language: {
     en: "English",
     es: "Español",

@@ -339,6 +339,18 @@ const es = {
       delivered: "Entregado",
     },
   },
+  settings: {
+    title: "Configuración",
+    subtitle: "Configura tu CRM de farmacia",
+    generalTitle: "Configuración General",
+    pharmacyName: "Nombre de la Farmacia",
+    address: "Dirección",
+    phone: "Teléfono",
+    email: "Correo",
+    timezone: "Zona Horaria",
+    language: "Idioma",
+    saved: "Configuración general guardada",
+  },
   language: {
     en: "English",
     es: "Español",
