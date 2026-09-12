@@ -6,6 +6,7 @@ import { cn } from '@/utils';
 interface DialogProps {
   open: boolean;
   onClose: () => void;
+  afterLeave?: () => void;
   title?: string;
   children: React.ReactNode;
   className?: string;
@@ -19,9 +20,9 @@ const sizes = {
   xl: 'max-w-xl',
 };
 
-export function Dialog({ open, onClose, title, children, className, size = 'md' }: DialogProps) {
+export function Dialog({ open, onClose, afterLeave, title, children, className, size = 'md' }: DialogProps) {
   return (
-    <Transition appear show={open} as={Fragment}>
+    <Transition appear show={open} as={Fragment} afterLeave={afterLeave}>
       <HeadlessDialog as="div" className="relative z-50" onClose={onClose}>
         <Transition.Child
           as={Fragment}
@@ -40,11 +41,11 @@ export function Dialog({ open, onClose, title, children, className, size = 'md' 
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
               leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
             >
               <HeadlessDialog.Panel
                 className={cn(

@@ -11,6 +11,9 @@ import settingsReducer from '@/features/settings/settingsSlice';
 import medicationsReducer from '@/features/medications/medicationsSlice';
 import usersReducer from '@/features/users/usersSlice';
 import activityLogsReducer from '@/features/activityLogs/activityLogsSlice';
+import catalogCategoriesReducer from '@/features/catalog/categories/catalogCategoriesSlice';
+import catalogProductsReducer from '@/features/catalog/products/catalogProductsSlice';
+import catalogOrdersReducer from '@/features/catalog/orders/catalogOrdersSlice';
 
 export const store = configureStore({
   reducer: {
@@ -26,6 +29,9 @@ export const store = configureStore({
     medications: medicationsReducer,
     users: usersReducer,
     activityLogs: activityLogsReducer,
+    catalogCategories: catalogCategoriesReducer,
+    catalogProducts: catalogProductsReducer,
+    catalogOrders: catalogOrdersReducer,
   },
 });
 

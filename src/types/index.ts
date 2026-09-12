@@ -6,3 +6,6 @@ export * from './followup';
 export * from './contact';
 export * from './notification';
 export * from './user';
+export * from './catalogCategory';
+export * from './catalogProduct';
+export * from './catalogOrder';

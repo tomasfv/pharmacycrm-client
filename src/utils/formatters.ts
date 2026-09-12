@@ -39,3 +39,7 @@ export function getInitials(name: string): string {
 export function formatPhone(phone: string): string {
   return phone;
 }
+
+export function formatPrice(price: number): string {
+  return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(price);
+}

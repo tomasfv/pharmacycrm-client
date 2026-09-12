@@ -11,6 +11,9 @@ import { NotificationsPage } from '@/features/notifications/NotificationsPage';
 import { SettingsPage } from '@/features/settings/SettingsPage';
 import { MedicationsPage } from '@/features/medications/MedicationsPage';
 import { UsersPage } from '@/features/users/UsersPage';
+import { CatalogCategoriesPage } from '@/features/catalog/categories/CatalogCategoriesPage';
+import { CatalogProductsPage } from '@/features/catalog/products/CatalogProductsPage';
+import { CatalogOrdersPage } from '@/features/catalog/orders/CatalogOrdersPage';
 
 export function AppRouter() {
   return (
@@ -28,6 +31,9 @@ export function AppRouter() {
         <Route path="settings" element={<SettingsPage />} />
         <Route path="medications" element={<MedicationsPage />} />
         <Route path="users" element={<UsersPage />} />
+        <Route path="catalog/categories" element={<CatalogCategoriesPage />} />
+        <Route path="catalog/products" element={<CatalogProductsPage />} />
+        <Route path="catalog/orders" element={<CatalogOrdersPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

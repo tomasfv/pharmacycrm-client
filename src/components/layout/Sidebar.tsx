@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import { cn } from "@/utils";
@@ -12,6 +13,8 @@ import {
   Cog6ToothIcon,
   BeakerIcon,
   UsersIcon,
+  ShoppingBagIcon,
+  ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectUnreadCount } from "@/features/notifications/notificationsSlice";
@@ -28,6 +31,7 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
   const navigate = useNavigate();
   const unreadCount = useAppSelector(selectUnreadCount);
   const pharmacyName = useAppSelector((state) => state.settings.general.pharmacyName);
+  const [catalogOpen, setCatalogOpen] = useState(false);
 
   const navItems = [
     { to: "/dashboard", icon: Squares2X2Icon, label: t("nav.dashboard") },
@@ -40,6 +44,14 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
     { to: "/users", icon: UsersIcon, label: t("nav.users") },
     { to: "/settings", icon: Cog6ToothIcon, label: t("nav.settings") },
   ];
+
+  const catalogSubItems = [
+    { to: "/catalog/categories", label: t("nav.catalogCategories") },
+    { to: "/catalog/products", label: t("nav.catalogProducts") },
+    { to: "/catalog/orders", label: t("nav.catalogOrders") },
+  ];
+
+  const isCatalogActive = catalogSubItems.some((item) => location.pathname === item.to);
 
   return (
     <>
@@ -87,6 +99,45 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
               )}
             </NavLink>
           ))}
+
+          {/* Catalog section */}
+          <div>
+            <button
+              onClick={() => setCatalogOpen(!catalogOpen)}
+              className={cn(
+                "w-full flex items-center justify-center 2xl:justify-start gap-3 px-0 2xl:px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                isCatalogActive
+                  ? "bg-primary-50 text-primary-700"
+                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+              )}
+            >
+              <ShoppingBagIcon className="h-5 w-5 shrink-0" />
+              <span className="hidden 2xl:inline">{t("nav.catalog")}</span>
+              <ChevronDownIcon className={cn("hidden 2xl:inline h-4 w-4 ml-auto transition-transform", catalogOpen && "rotate-180")} />
+            </button>
+            {catalogOpen && (
+              <div className="ml-4 2xl:ml-6 space-y-0.5 mt-0.5">
+                {catalogSubItems.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    title={item.label}
+                    onClick={onClose}
+                    className={({ isActive }) =>
+                      cn(
+                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                        isActive
+                          ? "bg-primary-50 text-primary-700"
+                          : "text-gray-500 hover:bg-gray-100 hover:text-gray-900",
+                      )
+                    }
+                  >
+                    <span className="hidden 2xl:inline">{item.label}</span>
+                  </NavLink>
+                ))}
+              </div>
+            )}
+          </div>
         </nav>
 
         <div className="p-2 2xl:p-3 border-t border-gray-200">
