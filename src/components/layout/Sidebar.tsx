@@ -15,6 +15,9 @@ import {
   UsersIcon,
   ShoppingBagIcon,
   ChevronDownIcon,
+  FolderIcon,
+  CubeIcon,
+  DocumentTextIcon,
 } from "@heroicons/react/24/outline";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectUnreadCount } from "@/features/notifications/notificationsSlice";
@@ -46,9 +49,9 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
   ];
 
   const catalogSubItems = [
-    { to: "/catalog/categories", label: t("nav.catalogCategories") },
-    { to: "/catalog/products", label: t("nav.catalogProducts") },
-    { to: "/catalog/orders", label: t("nav.catalogOrders") },
+    { to: "/catalog/categories", label: t("nav.catalogCategories"), icon: FolderIcon },
+    { to: "/catalog/products", label: t("nav.catalogProducts"), icon: CubeIcon },
+    { to: "/catalog/orders", label: t("nav.catalogOrders"), icon: DocumentTextIcon },
   ];
 
   const isCatalogActive = catalogSubItems.some((item) => location.pathname === item.to);
@@ -125,13 +128,14 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
                     onClick={onClose}
                     className={({ isActive }) =>
                       cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                        "flex items-center justify-center 2xl:justify-start gap-3 px-0 2xl:px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                         isActive
                           ? "bg-primary-50 text-primary-700"
                           : "text-gray-500 hover:bg-gray-100 hover:text-gray-900",
                       )
                     }
                   >
+                    <item.icon className="h-5 w-5 shrink-0" />
                     <span className="hidden 2xl:inline">{item.label}</span>
                   </NavLink>
                 ))}
