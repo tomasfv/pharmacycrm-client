@@ -45,7 +45,6 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
   ];
 
   const navItems = [
-    { to: "/dashboard", icon: Squares2X2Icon, label: t("nav.dashboard") },
     { to: "/contacts", icon: PhoneIcon, label: t("nav.contacts") },
     { to: "/reports", icon: ChartBarIcon, label: t("nav.reports") },
     { to: "/notifications", icon: BellIcon, label: t("nav.notifications") },
@@ -88,6 +87,24 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
         </div>
 
         <nav className="flex-1 py-4 px-2 2xl:px-3 space-y-1 overflow-y-auto">
+          {/* Dashboard */}
+          <NavLink
+            to="/dashboard"
+            title={t("nav.dashboard")}
+            onClick={onClose}
+            className={({ isActive }) =>
+              cn(
+                "flex items-center justify-center 2xl:justify-start gap-3 px-0 2xl:px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                isActive
+                  ? "bg-primary-50 text-primary-700"
+                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+              )
+            }
+          >
+            <Squares2X2Icon className="h-5 w-5 shrink-0" />
+            <span className="hidden 2xl:inline">{t("nav.dashboard")}</span>
+          </NavLink>
+
           {/* Patients section */}
           <div>
             <button
@@ -128,31 +145,6 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
             )}
           </div>
 
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              title={item.label}
-              onClick={onClose}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center justify-center 2xl:justify-start gap-3 px-0 2xl:px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-primary-50 text-primary-700"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
-                )
-              }
-            >
-              <item.icon className="h-5 w-5 shrink-0" />
-              <span className="hidden 2xl:inline">{item.label}</span>
-              {item.to === "/notifications" && unreadCount > 0 && (
-                <span className="hidden 2xl:inline-flex ml-auto bg-red-500 text-white text-xs rounded-full h-5 min-w-[20px] items-center justify-center px-1">
-                  {unreadCount}
-                </span>
-              )}
-            </NavLink>
-          ))}
-
           {/* Catalog section */}
           <div>
             <button
@@ -192,6 +184,32 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
               </div>
             )}
           </div>
+
+          {/* Other nav items */}
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              title={item.label}
+              onClick={onClose}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center justify-center 2xl:justify-start gap-3 px-0 2xl:px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-primary-50 text-primary-700"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+                )
+              }
+            >
+              <item.icon className="h-5 w-5 shrink-0" />
+              <span className="hidden 2xl:inline">{item.label}</span>
+              {item.to === "/notifications" && unreadCount > 0 && (
+                <span className="hidden 2xl:inline-flex ml-auto bg-red-500 text-white text-xs rounded-full h-5 min-w-[20px] items-center justify-center px-1">
+                  {unreadCount}
+                </span>
+              )}
+            </NavLink>
+          ))}
         </nav>
 
         <div className="p-2 2xl:p-3 border-t border-gray-200">

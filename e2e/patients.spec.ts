@@ -68,6 +68,7 @@ test.describe('Patients CRUD', () => {
       },
     );
 
+    await page.locator('nav button').filter({ hasText: /Patients|Pacientes/i }).click();
     await page.locator('nav a[href="/patients"]').click();
 
     await expect(page.getByRole('heading', { name: 'Patients', exact: true })).toBeVisible();
