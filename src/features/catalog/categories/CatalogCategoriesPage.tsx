@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchCatalogCategories, addCatalogCategory, updateCatalogCategory, deleteCatalogCategory } from './catalogCategoriesSlice';
-import { DataGrid, Button, Card, Dialog, Input } from '@/components/ui';
+import { DataGrid, Button, Card, Dialog, Input, ImageUploader } from '@/components/ui';
 import type { CatalogCategory } from '@/types';
 import { formatDate } from '@/utils';
 import { PlusIcon, PencilSquareIcon, TrashIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
@@ -26,6 +26,7 @@ export function CatalogCategoriesPage() {
   const [editing, setEditing] = useState<CatalogCategory | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [name, setName] = useState('');
+  const [image, setImage] = useState<string | undefined>(undefined);
 
   const filtered = categories.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase()),
@@ -33,11 +34,11 @@ export function CatalogCategoriesPage() {
   const totalPages = Math.ceil(filtered.length / perPage);
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
 
-  const resetForm = () => { setEditing(null); setName(''); };
+  const resetForm = () => { setEditing(null); setName(''); setImage(undefined); };
 
   const openCreate = () => { resetForm(); setShowForm(true); };
 
-  const openEdit = (cat: CatalogCategory) => { setEditing(cat); setName(cat.name); setShowForm(true); };
+  const openEdit = (cat: CatalogCategory) => { setEditing(cat); setName(cat.name); setImage(cat.image); setShowForm(true); };
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -46,10 +47,10 @@ export function CatalogCategoriesPage() {
     }
     try {
       if (editing) {
-        await dispatch(updateCatalogCategory({ ...editing, name: name.trim() })).unwrap();
+        await dispatch(updateCatalogCategory({ ...editing, name: name.trim(), image })).unwrap();
         showSnackbar(t('catalog.updatedSuccess'), 'success');
       } else {
-        await dispatch(addCatalogCategory({ name: name.trim() })).unwrap();
+        await dispatch(addCatalogCategory({ name: name.trim(), image })).unwrap();
         showSnackbar(t('catalog.createdSuccess'), 'success');
       }
       setShowForm(false);
@@ -122,6 +123,10 @@ export function CatalogCategoriesPage() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">{t('catalog.categoryName')} *</label>
             <Input placeholder={t('catalog.categoryNamePlaceholder')} value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('catalog.image')}</label>
+            <ImageUploader value={image} onChange={(url) => setImage(url)} folder="pharmacycrm/categories" />
           </div>
         </div>
         <div className="flex justify-end gap-3 mt-6">

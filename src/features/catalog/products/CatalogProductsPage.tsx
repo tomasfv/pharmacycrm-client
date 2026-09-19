@@ -8,7 +8,7 @@ import {
   deleteCatalogProduct,
 } from "./catalogProductsSlice";
 import { fetchCatalogCategories } from "../categories/catalogCategoriesSlice";
-import { DataGrid, Button, Card, Dialog, Input, Select } from "@/components/ui";
+import { DataGrid, Button, Card, Dialog, Input, Select, ImageUploader } from "@/components/ui";
 import type { CatalogProduct } from "@/types";
 import { formatDate, formatPrice } from "@/utils";
 import {
@@ -288,13 +288,9 @@ export function CatalogProductsPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t("catalog.imageUrl")}
+              {t("catalog.image")}
             </label>
-            <Input
-              placeholder="https://..."
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-            />
+            <ImageUploader value={imageUrl} onChange={(url) => setImageUrl(url || "")} folder="pharmacycrm/products" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">

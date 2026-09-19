@@ -28,7 +28,7 @@ export const fetchCatalogCategories = createAsyncThunk(
 
 export const addCatalogCategory = createAsyncThunk(
   'catalogCategories/add',
-  async (categoryData: { name: string }, { rejectWithValue }) => {
+  async (categoryData: { name: string; image?: string }, { rejectWithValue }) => {
     try {
       const { data } = await catalogCategoriesApi.create(categoryData);
       return data.data as CatalogCategory;
@@ -42,7 +42,7 @@ export const updateCatalogCategory = createAsyncThunk(
   'catalogCategories/update',
   async (category: CatalogCategory, { rejectWithValue }) => {
     try {
-      const { data } = await catalogCategoriesApi.update(category.id, { name: category.name });
+      const { data } = await catalogCategoriesApi.update(category.id, { name: category.name, image: category.image });
       return data.data as CatalogCategory;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || 'Failed to update category');

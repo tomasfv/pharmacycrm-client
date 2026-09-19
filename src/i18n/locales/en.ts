@@ -411,6 +411,12 @@ const en = {
     total: "Total",
     orderDetail: "Order Detail",
     close: "Close",
+    image: "Image",
+    imageDropOrClick: "Drag an image or click to select",
+    uploading: "Uploading",
+    imageInvalidType: "Invalid file type. Only JPEG, PNG, WebP and GIF are accepted",
+    imageTooLarge: "Image is too large. Maximum size is 5MB",
+    imageUploadError: "Failed to upload image",
   },
 };
 

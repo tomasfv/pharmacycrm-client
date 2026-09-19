@@ -412,6 +412,12 @@ const es = {
     total: "Total",
     orderDetail: "Detalle de Orden",
     close: "Cerrar",
+    image: "Imagen",
+    imageDropOrClick: "Arrastrá una imagen o hacé click para seleccionar",
+    uploading: "Subiendo",
+    imageInvalidType: "Tipo de archivo no válido. Solo se aceptan JPEG, PNG, WebP y GIF",
+    imageTooLarge: "La imagen es demasiado grande. El tamaño máximo es 5MB",
+    imageUploadError: "Error al subir la imagen",
   },
 };
 

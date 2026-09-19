@@ -11,3 +11,4 @@ export { Spinner } from './Spinner';
 export { Modal } from './Modal';
 export { SnackbarProvider, useSnackbar } from './Snackbar';
 export { Tooltip } from './Tooltip';
+export { ImageUploader } from './ImageUploader';
