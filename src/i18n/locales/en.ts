@@ -30,7 +30,8 @@ const en = {
   },
   nav: {
     dashboard: "Dashboard",
-    patients: "Patients",
+    patientsParent: "Patients",
+    chronic: "Chronic",
     medications: "Medications",
     orders: "Orders",
     followUps: "Follow-ups",

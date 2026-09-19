@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import { cn } from "@/utils";
 import {
@@ -32,16 +32,21 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const unreadCount = useAppSelector(selectUnreadCount);
   const pharmacyName = useAppSelector((state) => state.settings.general.pharmacyName);
   const [catalogOpen, setCatalogOpen] = useState(false);
+  const [patientsOpen, setPatientsOpen] = useState(false);
+
+  const patientsSubItems = [
+    { to: "/patients", label: t("nav.chronic"), icon: UserGroupIcon },
+    { to: "/followups", label: t("nav.followUps"), icon: ClipboardDocumentListIcon },
+    { to: "/medications", label: t("nav.medications"), icon: BeakerIcon },
+  ];
 
   const navItems = [
     { to: "/dashboard", icon: Squares2X2Icon, label: t("nav.dashboard") },
-    { to: "/patients", icon: UserGroupIcon, label: t("nav.patients") },
-    { to: "/followups", icon: ClipboardDocumentListIcon, label: t("nav.followUps") },
     { to: "/contacts", icon: PhoneIcon, label: t("nav.contacts") },
-    { to: "/medications", icon: BeakerIcon, label: t("nav.medications") },
     { to: "/reports", icon: ChartBarIcon, label: t("nav.reports") },
     { to: "/notifications", icon: BellIcon, label: t("nav.notifications") },
     { to: "/users", icon: UsersIcon, label: t("nav.users") },
@@ -54,7 +59,12 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
     { to: "/catalog/orders", label: t("nav.catalogOrders"), icon: DocumentTextIcon },
   ];
 
+  const isPatientsActive = patientsSubItems.some((item) => location.pathname === item.to || location.pathname.startsWith(item.to + "/"));
   const isCatalogActive = catalogSubItems.some((item) => location.pathname === item.to);
+
+  useEffect(() => {
+    if (isPatientsActive) setPatientsOpen(true);
+  }, [location.pathname]);
 
   return (
     <>
@@ -78,6 +88,46 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
         </div>
 
         <nav className="flex-1 py-4 px-2 2xl:px-3 space-y-1 overflow-y-auto">
+          {/* Patients section */}
+          <div>
+            <button
+              onClick={() => setPatientsOpen(!patientsOpen)}
+              className={cn(
+                "w-full flex items-center justify-center 2xl:justify-start gap-3 px-0 2xl:px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                isPatientsActive
+                  ? "bg-primary-50 text-primary-700"
+                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+              )}
+            >
+              <UserGroupIcon className="h-5 w-5 shrink-0" />
+              <span className="hidden 2xl:inline">{t("nav.patientsParent")}</span>
+              <ChevronDownIcon className={cn("hidden 2xl:inline h-4 w-4 ml-auto transition-transform", patientsOpen && "rotate-180")} />
+            </button>
+            {patientsOpen && (
+              <div className="ml-4 2xl:ml-6 space-y-0.5 mt-0.5">
+                {patientsSubItems.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    title={item.label}
+                    onClick={onClose}
+                    className={({ isActive }) =>
+                      cn(
+                        "flex items-center justify-center 2xl:justify-start gap-3 px-0 2xl:px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                        isActive
+                          ? "bg-primary-50 text-primary-700"
+                          : "text-gray-500 hover:bg-gray-100 hover:text-gray-900",
+                      )
+                    }
+                  >
+                    <item.icon className="h-5 w-5 shrink-0" />
+                    <span className="hidden 2xl:inline">{item.label}</span>
+                  </NavLink>
+                ))}
+              </div>
+            )}
+          </div>
+
           {navItems.map((item) => (
             <NavLink
               key={item.to}
