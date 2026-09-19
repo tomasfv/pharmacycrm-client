@@ -38,6 +38,10 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [patientsOpen, setPatientsOpen] = useState(false);
 
+  const labelClass = collapsed ? "hidden 2xl:inline" : "inline lg:hidden 2xl:inline";
+  const badgeClass = collapsed ? "hidden 2xl:inline-flex" : "inline-flex lg:hidden 2xl:inline-flex";
+  const alignClass = collapsed ? "justify-center 2xl:justify-start" : "justify-start lg:justify-center 2xl:justify-start";
+
   const patientsSubItems = [
     { to: "/patients", label: t("nav.chronic"), icon: UserGroupIcon },
     { to: "/followups", label: t("nav.followUps"), icon: ClipboardDocumentListIcon },
@@ -75,15 +79,17 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
       )}
       <aside
         className={cn(
-          "fixed lg:static inset-y-0 left-0 z-30 w-16 2xl:w-48 bg-white border-r border-gray-200 flex flex-col transition-transform duration-300",
-          collapsed && "-translate-x-full lg:translate-x-0",
+          "fixed lg:static inset-y-0 left-0 z-30 bg-white border-r border-gray-200 flex flex-col transition-all duration-300 lg:w-16 2xl:w-48",
+          collapsed
+            ? "w-16 -translate-x-full lg:translate-x-0"
+            : "w-48 translate-x-0",
         )}
       >
-        <div className="h-16 flex items-center justify-center 2xl:justify-start gap-2 px-4 border-b border-gray-200 overflow-hidden">
+        <div className={cn("h-16 flex items-center gap-2 px-4 border-b border-gray-200 overflow-hidden", alignClass)}>
           <div className="h-8 w-8 rounded-lg bg-primary-600 flex items-center justify-center shrink-0">
             <span className="text-white font-bold text-sm">{pharmacyName.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}</span>
           </div>
-          <span className="hidden 2xl:inline font-semibold text-gray-900 line-clamp-2">{pharmacyName}</span>
+          <span className={cn(labelClass, "font-semibold text-gray-900 line-clamp-2")}>{pharmacyName}</span>
         </div>
 
         <nav className="flex-1 py-4 px-2 2xl:px-3 space-y-1 overflow-y-auto">
@@ -94,7 +100,8 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
             onClick={onClose}
             className={({ isActive }) =>
               cn(
-                "flex items-center justify-center 2xl:justify-start gap-3 px-0 2xl:px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                "flex items-center gap-3 px-0 2xl:px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                alignClass,
                 isActive
                   ? "bg-primary-50 text-primary-700"
                   : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
@@ -102,7 +109,7 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
             }
           >
             <Squares2X2Icon className="h-5 w-5 shrink-0" />
-            <span className="hidden 2xl:inline">{t("nav.dashboard")}</span>
+            <span className={labelClass}>{t("nav.dashboard")}</span>
           </NavLink>
 
           {/* Patients section */}
@@ -110,15 +117,16 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
             <button
               onClick={() => setPatientsOpen(!patientsOpen)}
               className={cn(
-                "w-full flex items-center justify-center 2xl:justify-start gap-3 px-0 2xl:px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                "w-full flex items-center gap-3 px-0 2xl:px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                alignClass,
                 isPatientsActive
                   ? "bg-primary-50 text-primary-700"
                   : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
               )}
             >
               <UserGroupIcon className="h-5 w-5 shrink-0" />
-              <span className="hidden 2xl:inline">{t("nav.patientsParent")}</span>
-              <ChevronDownIcon className={cn("hidden 2xl:inline h-4 w-4 ml-auto transition-transform", patientsOpen && "rotate-180")} />
+              <span className={labelClass}>{t("nav.patientsParent")}</span>
+              <ChevronDownIcon className={cn(labelClass, "h-4 w-4 ml-auto transition-transform", patientsOpen && "rotate-180")} />
             </button>
             {patientsOpen && (
               <div className="ml-4 2xl:ml-6 space-y-0.5 mt-0.5">
@@ -130,7 +138,8 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
                     onClick={onClose}
                     className={({ isActive }) =>
                       cn(
-                        "flex items-center justify-center 2xl:justify-start gap-3 px-0 2xl:px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                        "flex items-center gap-3 px-0 2xl:px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                        alignClass,
                         isActive
                           ? "bg-primary-50 text-primary-700"
                           : "text-gray-500 hover:bg-gray-100 hover:text-gray-900",
@@ -138,7 +147,7 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
                     }
                   >
                     <item.icon className="h-5 w-5 shrink-0" />
-                    <span className="hidden 2xl:inline">{item.label}</span>
+                    <span className={labelClass}>{item.label}</span>
                   </NavLink>
                 ))}
               </div>
@@ -150,15 +159,16 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
             <button
               onClick={() => setCatalogOpen(!catalogOpen)}
               className={cn(
-                "w-full flex items-center justify-center 2xl:justify-start gap-3 px-0 2xl:px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                "w-full flex items-center gap-3 px-0 2xl:px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                alignClass,
                 isCatalogActive
                   ? "bg-primary-50 text-primary-700"
                   : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
               )}
             >
               <ShoppingBagIcon className="h-5 w-5 shrink-0" />
-              <span className="hidden 2xl:inline">{t("nav.catalog")}</span>
-              <ChevronDownIcon className={cn("hidden 2xl:inline h-4 w-4 ml-auto transition-transform", catalogOpen && "rotate-180")} />
+              <span className={labelClass}>{t("nav.catalog")}</span>
+              <ChevronDownIcon className={cn(labelClass, "h-4 w-4 ml-auto transition-transform", catalogOpen && "rotate-180")} />
             </button>
             {catalogOpen && (
               <div className="ml-4 2xl:ml-6 space-y-0.5 mt-0.5">
@@ -170,7 +180,8 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
                     onClick={onClose}
                     className={({ isActive }) =>
                       cn(
-                        "flex items-center justify-center 2xl:justify-start gap-3 px-0 2xl:px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                        "flex items-center gap-3 px-0 2xl:px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                        alignClass,
                         isActive
                           ? "bg-primary-50 text-primary-700"
                           : "text-gray-500 hover:bg-gray-100 hover:text-gray-900",
@@ -178,7 +189,7 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
                     }
                   >
                     <item.icon className="h-5 w-5 shrink-0" />
-                    <span className="hidden 2xl:inline">{item.label}</span>
+                    <span className={labelClass}>{item.label}</span>
                   </NavLink>
                 ))}
               </div>
@@ -194,7 +205,8 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
               onClick={onClose}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center justify-center 2xl:justify-start gap-3 px-0 2xl:px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                  "flex items-center gap-3 px-0 2xl:px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                  alignClass,
                   isActive
                     ? "bg-primary-50 text-primary-700"
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
@@ -202,9 +214,9 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
               }
             >
               <item.icon className="h-5 w-5 shrink-0" />
-              <span className="hidden 2xl:inline">{item.label}</span>
+              <span className={labelClass}>{item.label}</span>
               {item.to === "/notifications" && unreadCount > 0 && (
-                <span className="hidden 2xl:inline-flex ml-auto bg-red-500 text-white text-xs rounded-full h-5 min-w-[20px] items-center justify-center px-1">
+                <span className={cn(badgeClass, "ml-auto bg-red-500 text-white text-xs rounded-full h-5 min-w-[20px] items-center justify-center px-1")}>
                   {unreadCount}
                 </span>
               )}
@@ -219,10 +231,13 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
               dispatch(logoutAction());
               navigate("/login");
             }}
-            className="w-full flex items-center justify-center 2xl:justify-start gap-3 px-0 2xl:px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+            className={cn(
+              "w-full flex items-center gap-3 px-0 2xl:px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors",
+              alignClass,
+            )}
           >
             <ArrowRightOnRectangleIcon className="h-5 w-5 shrink-0" />
-            <span className="hidden 2xl:inline">{t('nav.logout')}</span>
+            <span className={labelClass}>{t('nav.logout')}</span>
           </button>
         </div>
       </aside>
