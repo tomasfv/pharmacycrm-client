@@ -6,6 +6,7 @@ export interface RawImportRow {
   name: string;
   priceRaw: string;
   stockRaw: string;
+  categoryId?: string;
 }
 
 export interface ParseResult {
@@ -43,6 +44,44 @@ export function decodeCsvBuffer(buf: ArrayBuffer): string {
   }
 }
 
+const TITLE_CASE_STOPWORDS = new Set([
+  "el", "la", "los", "las", "un", "una", "unos", "unas", "al", "del",
+  "y", "o", "u", "e", "ni", "a", "ante", "bajo", "con", "contra",
+  "de", "desde", "durante", "en", "entre", "hacia", "hasta",
+  "para", "por", "sin", "sobre", "tras", "versus", "via",
+]);
+
+const TITLE_CASE_ALWAYS_LOWER = new Set(["y"]);
+const TITLE_CASE_SEPARATORS = new Set(["-", "/", "("]);
+
+export function toTitleCase(value: string): string {
+  if (!value) return value;
+  return value
+    .split(" ")
+    .map((token, index) => {
+      const lower = token.toLowerCase();
+      const bare = lower.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "");
+      const keepLower =
+        index > 0 &&
+        TITLE_CASE_STOPWORDS.has(bare) &&
+        (bare.length > 1 || TITLE_CASE_ALWAYS_LOWER.has(bare));
+      if (keepLower) return lower;
+      let out = "";
+      let cap = true;
+      for (const ch of lower) {
+        if (cap && /\p{L}/u.test(ch)) {
+          out += ch.toUpperCase();
+          cap = false;
+        } else {
+          out += ch;
+          cap = TITLE_CASE_SEPARATORS.has(ch);
+        }
+      }
+      return out;
+    })
+    .join(" ");
+}
+
 const SKU_HEADERS = ["codigo"];
 const NAME_HEADERS = ["descricion", "descripcion"];
 const PRICE_HEADERS = ["pventa"];
@@ -75,7 +114,7 @@ export function parseImportCsv(text: string): ParseResult {
     .map((r, i) => ({
       rowNum: i + 1,
       sku: String(r[skuHeader] ?? "").trim(),
-      name: String(r[nameHeader] ?? "").trim(),
+      name: toTitleCase(String(r[nameHeader] ?? "").trim()),
       priceRaw: String(r[priceHeader] ?? "").trim(),
       stockRaw: stockHeader ? String(r[stockHeader] ?? "").trim() : "",
     }))

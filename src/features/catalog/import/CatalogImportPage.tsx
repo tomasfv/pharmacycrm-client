@@ -122,8 +122,21 @@ export function CatalogImportPage() {
 
   const selectedValidCount =
     selectionStats.created + selectionStats.update + selectionStats.unchanged;
-  const needsCategory = selectionStats.created > 0;
-  const canImport = selectedValidCount > 0 && (!needsCategory || !!newCategoryId);
+  const hasNewRows = counts.new > 0;
+  const missingCategoryCount = useMemo(() => {
+    let n = 0;
+    for (const r of rows) {
+      if (
+        selected.has(r.rowNum) &&
+        statuses.get(r.rowNum) === "new" &&
+        !r.categoryId
+      ) {
+        n += 1;
+      }
+    }
+    return n;
+  }, [rows, selected, statuses]);
+  const canImport = selectedValidCount > 0 && missingCategoryCount === 0;
 
   const statusVariant = (st: RowStatus) =>
     st === "new"
@@ -191,6 +204,15 @@ export function CatalogImportPage() {
     setRows((prev) => prev.map((r) => (r.rowNum === rowNum ? { ...r, ...patch } : r)));
   };
 
+  const applyBulkCategory = (categoryId: string) => {
+    setNewCategoryId(categoryId);
+    setRows((prev) =>
+      prev.map((r) =>
+        statuses.get(r.rowNum) === "new" ? { ...r, categoryId } : r,
+      ),
+    );
+  };
+
   const toggleRow = (row: RawImportRow) => {
     if (statuses.get(row.rowNum) === "invalid") return;
     setSelected((prev) => {
@@ -216,22 +238,23 @@ export function CatalogImportPage() {
   };
 
   const buildPayloadRows = () => {
-    const categoryName = categories.find((c) => c.id === newCategoryId)?.name ?? "";
     return rows
       .filter(
         (r) => selected.has(r.rowNum) && statuses.get(r.rowNum) !== "invalid",
       )
       .map((r) => {
         const existing = existingBySku.get(r.sku);
+        const categoryName = existing
+          ? existing.category?.name || "Sin categoría"
+          : categories.find((c) => c.id === r.categoryId)?.name ||
+            "Sin categoría";
         return {
           rowNum: r.rowNum,
           item: {
             sku: r.sku,
             name: r.name,
             price: parseNumber(r.priceRaw) as number,
-            categoryName: existing
-              ? existing.category?.name || "Sin categoría"
-              : categoryName,
+            categoryName,
             inStock: inStockFromRaw(r.stockRaw),
           },
         };
@@ -415,21 +438,21 @@ export function CatalogImportPage() {
               </div>
             </div>
 
-            {needsCategory && (
+            {hasNewRows && (
               <div className="flex items-end gap-3 flex-wrap">
                 <div className="w-72">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t("catalog.importNewCategory")} *
+                    {t("catalog.importNewCategory")}
                   </label>
                   <Select
                     value={newCategoryId}
-                    onChange={(e) => setNewCategoryId(e.target.value)}
+                    onChange={(e) => applyBulkCategory(e.target.value)}
                     options={categories.map((c) => ({ value: c.id, label: c.name }))}
                     placeholder={t("catalog.selectCategory")}
                   />
                 </div>
                 <p className="text-xs text-gray-500 pb-2">
-                  {t("catalog.importNewCategoryHint", { count: selectionStats.created })}
+                  {t("catalog.importNewCategoryHint", { count: counts.new })}
                 </p>
               </div>
             )}
@@ -453,6 +476,9 @@ export function CatalogImportPage() {
                     </th>
                     <th className="py-2 pr-3 font-medium w-48">
                       {t("catalog.importColNewPrice")}
+                    </th>
+                    <th className="py-2 pr-3 font-medium w-44">
+                      {t("catalog.importColCategory")}
                     </th>
                     <th className="py-2 font-medium w-40">
                       {t("catalog.importColStatus")}
@@ -512,6 +538,28 @@ export function CatalogImportPage() {
                             </span>
                           )}
                         </td>
+                        <td className="py-2 pr-3">
+                          {st === "new" ? (
+                            <Select
+                              value={row.categoryId ?? ""}
+                              onChange={(e) =>
+                                updateRow(row.rowNum, {
+                                  categoryId: e.target.value,
+                                })
+                              }
+                              options={categories.map((c) => ({
+                                value: c.id,
+                                label: c.name,
+                              }))}
+                              placeholder={t("catalog.selectCategory")}
+                              className="w-full"
+                            />
+                          ) : (
+                            <span className="text-xs text-gray-500">
+                              {existing?.category?.name || "—"}
+                            </span>
+                          )}
+                        </td>
                         <td className="py-2">
                           <Badge variant={statusVariant(st)}>
                             {t(`catalog.importStatus_${st}`)}
@@ -522,7 +570,7 @@ export function CatalogImportPage() {
                   })}
                   {paginated.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="py-8 text-center text-gray-500">
+                      <td colSpan={6} className="py-8 text-center text-gray-500">
                         {t("catalog.importNoRows")}
                       </td>
                     </tr>
@@ -562,9 +610,11 @@ export function CatalogImportPage() {
                   created: selectionStats.created,
                   updated: selectionStats.update,
                 })}
-                {needsCategory && !newCategoryId && (
+                {missingCategoryCount > 0 && (
                   <span className="text-red-600 ml-2">
-                    {t("catalog.importNewCategoryRequired")}
+                    {t("catalog.importNewCategoryRequired", {
+                      count: missingCategoryCount,
+                    })}
                   </span>
                 )}
               </p>

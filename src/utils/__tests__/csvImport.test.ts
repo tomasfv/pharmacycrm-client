@@ -8,15 +8,16 @@ import {
   inStockFromRaw,
   chunk,
   decodeCsvBuffer,
+  toTitleCase,
   RawImportRow,
 } from '../csvImport';
 
 const ERP_CSV = [
   'Código;Descrición;C.Lab.;Laborat;P.Venta;Stock;Prom;Minimo;Maximo;I.V.A;P.Oferta;P.Costo;C.Barra;Rubro_Art',
-  '7754;Ibuprofeno 600 mg;123;Genfar;13.550,00;45;0;5;50;21;14.000,00;9.000,00;7801234567890;Analgésicos',
-  '8812;Crema Hidratante Nivea;456;Nivea;9.900,00;0;0;2;20;21;;;;2000000000012;Perfumería',
+  '7754;IBUPROFENO 600 MG;123;Genfar;13.550,00;45;0;5;50;21;14.000,00;9.000,00;7801234567890;Analgésicos',
+  '8812;CREMA HIDRATANTE NIVEA;456;Nivea;9.900,00;0;0;2;20;21;;;;2000000000012;Perfumería',
   '',
-  '9931;Vitamina C 1000;789;Bayer;4500;12;0;3;30;21;;;;2000000000029;Vitaminas',
+  '9931;VITAMINA C 1000;789;Bayer;4500;12;0;3;30;21;;;;2000000000029;Vitaminas',
 ].join('\n');
 
 describe('normalizeHeader', () => {
@@ -49,12 +50,19 @@ describe('parseImportCsv', () => {
     expect(rows[0]).toEqual({
       rowNum: 1,
       sku: '7754',
-      name: 'Ibuprofeno 600 mg',
+      name: 'Ibuprofeno 600 Mg',
       priceRaw: '13.550,00',
       stockRaw: '45',
     });
     expect(rows[2].sku).toBe('9931');
+    expect(rows[2].name).toBe('Vitamina C 1000');
     expect(rows[2].priceRaw).toBe('4500');
+  });
+
+  it('applies title case to product names', () => {
+    const csv = 'Código;Descrición;P.Venta\nXX1;CURITAS DE SPIDERMAN X 30;1500\n';
+    const { rows } = parseImportCsv(csv);
+    expect(rows[0].name).toBe('Curitas de Spiderman X 30');
   });
 
   it('handles headers without accent or with correct spelling', () => {
@@ -236,8 +244,61 @@ describe('decodeCsvBuffer', () => {
     expect(parsed.missing).toEqual([]);
     expect(parsed.rows).toHaveLength(2);
     expect(parsed.rows[0].sku).toBe('XX52861');
-    expect(parsed.rows[0].name).toBe('ACEITE DE ALMENDRAS');
+    expect(parsed.rows[0].name).toBe('Aceite de Almendras');
     expect(parsed.rows[0].priceRaw).toBe('2398.5');
     expect(parsed.rows[1].priceRaw).toBe('9900.5');
+  });
+});
+
+describe('toTitleCase', () => {
+  it('capitalizes each word and keeps short prepositions lowercase', () => {
+    expect(toTitleCase('CURITAS DE SPIDERMAN X 30')).toBe(
+      'Curitas de Spiderman X 30',
+    );
+    expect(toTitleCase('ACEITE DE ALMENDRAS TIPO X 40CC TABLADA')).toBe(
+      'Aceite de Almendras Tipo X 40cc Tablada',
+    );
+    expect(toTitleCase('ACEITE PARA CUTICULA (AF 04301)')).toBe(
+      'Aceite para Cuticula (Af 04301)',
+    );
+    expect(toTitleCase('DESPERTADOR PARA BEBES')).toBe(
+      'Despertador para Bebes',
+    );
+  });
+
+  it('keeps single-letter tokens uppercase, except y', () => {
+    expect(toTitleCase('CURITAS X 30')).toBe('Curitas X 30');
+    expect(toTitleCase('DISCOS X 80 U.')).toBe('Discos X 80 U.');
+    expect(toTitleCase('SAL Y PIMIENTA')).toBe('Sal y Pimienta');
+  });
+
+  it('capitalizes after hyphens, slashes and parentheses', () => {
+    expect(toTitleCase('BEBEFANTITOS-ASPIRADOR NASAL')).toBe(
+      'Bebefantitos-Aspirador Nasal',
+    );
+    expect(toTitleCase('BOLSA P/CAMA C/GANCHO')).toBe(
+      'Bolsa P/Cama C/Gancho',
+    );
+    expect(toTitleCase('APOSITO GASANA 10X10(X 8 UNID)')).toBe(
+      'Aposito Gasana 10x10(X 8 Unid)',
+    );
+  });
+
+  it('applies the uniform rule to units', () => {
+    expect(toTitleCase('100ML SPRAY')).toBe('100ml Spray');
+    expect(toTitleCase('10 VOL X 40CC')).toBe('10 Vol X 40cc');
+  });
+
+  it('handles accents and empty values', () => {
+    expect(toTitleCase('CEPILLO DE UÑAS')).toBe('Cepillo de Uñas');
+    expect(toTitleCase('')).toBe('');
+  });
+
+  it('is idempotent', () => {
+    const once = toTitleCase('ACEITE DE ALMENDRAS TIPO X 40CC TABLADA');
+    expect(toTitleCase(once)).toBe(once);
+    expect(toTitleCase('Curitas de Spiderman X 30')).toBe(
+      'Curitas de Spiderman X 30',
+    );
   });
 });
