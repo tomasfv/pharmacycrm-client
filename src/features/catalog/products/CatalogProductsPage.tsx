@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   fetchCatalogProducts,
@@ -16,6 +17,7 @@ import {
   PencilSquareIcon,
   TrashIcon,
   MagnifyingGlassIcon,
+  ArrowUpTrayIcon,
 } from "@heroicons/react/24/outline";
 import { useSnackbar } from "@/components/ui";
 
@@ -29,6 +31,7 @@ interface VariationDraft {
 export function CatalogProductsPage() {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { showSnackbar } = useSnackbar();
   const products = useAppSelector((state) => state.catalogProducts.products);
   const categories = useAppSelector(
@@ -246,10 +249,16 @@ export function CatalogProductsPage() {
             {t("catalog.productCount", { count: products.length })}
           </p>
         </div>
-        <Button onClick={openCreate}>
-          <PlusIcon className="h-4 w-4" />
-          {t("catalog.newProduct")}
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button variant="secondary" onClick={() => navigate("/catalog/import")}>
+            <ArrowUpTrayIcon className="h-4 w-4" />
+            {t("catalog.importCSV")}
+          </Button>
+          <Button onClick={openCreate}>
+            <PlusIcon className="h-4 w-4" />
+            {t("catalog.newProduct")}
+          </Button>
+        </div>
       </div>
 
       <Card>

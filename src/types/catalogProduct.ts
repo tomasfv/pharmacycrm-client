@@ -11,6 +11,7 @@ export interface CatalogProductVariation {
 
 export interface CatalogProduct {
   id: string;
+  sku?: string;
   name: string;
   price: number;
   categoryId: string;
@@ -20,4 +21,17 @@ export interface CatalogProduct {
   category?: CatalogCategory;
   variations?: CatalogProductVariation[];
   createdAt: string;
+}
+
+export interface CatalogBatchError {
+  index: number;
+  sku: string;
+  message: string;
+}
+
+export interface CatalogBatchResult {
+  created: number;
+  updated: number;
+  unchanged: number;
+  errors: CatalogBatchError[];
 }

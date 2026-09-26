@@ -14,6 +14,7 @@ import { UsersPage } from '@/features/users/UsersPage';
 import { CatalogCategoriesPage } from '@/features/catalog/categories/CatalogCategoriesPage';
 import { CatalogProductsPage } from '@/features/catalog/products/CatalogProductsPage';
 import { CatalogOrdersPage } from '@/features/catalog/orders/CatalogOrdersPage';
+import { CatalogImportPage } from '@/features/catalog/import/CatalogImportPage';
 
 export function AppRouter() {
   return (
@@ -33,6 +34,7 @@ export function AppRouter() {
         <Route path="users" element={<UsersPage />} />
         <Route path="catalog/categories" element={<CatalogCategoriesPage />} />
         <Route path="catalog/products" element={<CatalogProductsPage />} />
+        <Route path="catalog/import" element={<CatalogImportPage />} />
         <Route path="catalog/orders" element={<CatalogOrdersPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

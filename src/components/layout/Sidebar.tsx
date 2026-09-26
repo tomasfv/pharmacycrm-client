@@ -18,6 +18,7 @@ import {
   FolderIcon,
   CubeIcon,
   DocumentTextIcon,
+  ArrowUpTrayIcon,
 } from "@heroicons/react/24/outline";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectUnreadCount } from "@/features/notifications/notificationsSlice";
@@ -59,6 +60,7 @@ export function Sidebar({ collapsed, onClose }: SidebarProps) {
   const catalogSubItems = [
     { to: "/catalog/categories", label: t("nav.catalogCategories"), icon: FolderIcon },
     { to: "/catalog/products", label: t("nav.catalogProducts"), icon: CubeIcon },
+    { to: "/catalog/import", label: t("nav.catalogImport"), icon: ArrowUpTrayIcon },
     { to: "/catalog/orders", label: t("nav.catalogOrders"), icon: DocumentTextIcon },
   ];
 
