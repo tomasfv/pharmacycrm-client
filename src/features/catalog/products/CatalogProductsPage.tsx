@@ -307,6 +307,7 @@ export function CatalogProductsPage() {
         }}
         title={editing ? t("catalog.editProduct") : t("catalog.newProduct")}
         size="lg"
+        draggable
       >
         <div className="space-y-4">
           <div>

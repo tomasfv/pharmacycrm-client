@@ -3,6 +3,7 @@ const es = {
     save: "Guardar",
     saving: "Guardar Cambios",
     cancel: "Cancelar",
+    dragHint: "Arrastrá para mover",
     delete: "Eliminar",
     edit: "Editar",
     back: "Volver",

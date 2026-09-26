@@ -3,6 +3,7 @@ const en = {
     save: "Save",
     saving: "Save Changes",
     cancel: "Cancel",
+    dragHint: "Drag to move",
     delete: "Delete",
     edit: "Edit",
     back: "Back",
