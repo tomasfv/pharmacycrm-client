@@ -419,6 +419,13 @@ const es = {
     imageInvalidType: "Tipo de archivo no válido. Solo se aceptan JPEG, PNG, WebP y GIF",
     imageTooLarge: "La imagen es demasiado grande. El tamaño máximo es 5MB",
     imageUploadError: "Error al subir la imagen",
+    variations: "Variaciones",
+    addVariation: "Agregar variación",
+    variationsHint: "Opcional. Ej: 120ml, 250ml, 500ml — cada variación tiene su propio precio y stock.",
+    variationLabel: "Variación",
+    variationLabelPlaceholder: "ej. 120ml",
+    variationRequired: "Cada variación necesita un nombre y un precio",
+    variationCount: "{{count}} variantes",
   },
 };
 

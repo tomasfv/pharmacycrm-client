@@ -19,6 +19,13 @@ import {
 } from "@heroicons/react/24/outline";
 import { useSnackbar } from "@/components/ui";
 
+interface VariationDraft {
+  label: string;
+  price: string;
+  inStock: boolean;
+}
+
+
 export function CatalogProductsPage() {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
@@ -47,6 +54,7 @@ export function CatalogProductsPage() {
   const [imageUrl, setImageUrl] = useState("");
   const [description, setDescription] = useState("");
   const [inStock, setInStock] = useState(true);
+  const [variations, setVariations] = useState<VariationDraft[]>([]);
 
   const filtered = products.filter((p) => {
     const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
@@ -69,6 +77,7 @@ export function CatalogProductsPage() {
     setImageUrl("");
     setDescription("");
     setInStock(true);
+    setVariations([]);
   };
 
   const openCreate = () => {
@@ -84,12 +93,37 @@ export function CatalogProductsPage() {
     setImageUrl(p.imageUrl || "");
     setDescription(p.description || "");
     setInStock(p.inStock);
+    setVariations(
+      (p.variations ?? []).map((v) => ({
+        label: v.label,
+        price: String(v.price),
+        inStock: v.inStock,
+      })),
+    );
     setShowForm(true);
+  };
+
+  const addVariation = () => {
+    setVariations((prev) => [...prev, { label: "", price: "", inStock: true }]);
+  };
+
+  const updateVariation = (index: number, patch: Partial<VariationDraft>) => {
+    setVariations((prev) =>
+      prev.map((v, i) => (i === index ? { ...v, ...patch } : v)),
+    );
+  };
+
+  const removeVariation = (index: number) => {
+    setVariations((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSave = async () => {
     if (!name.trim() || !price || !categoryId) {
       showSnackbar(t("catalog.requiredFields"), "error");
+      return;
+    }
+    if (variations.some((v) => !v.label.trim() || !v.price)) {
+      showSnackbar(t("catalog.variationRequired"), "error");
       return;
     }
     try {
@@ -100,6 +134,12 @@ export function CatalogProductsPage() {
         imageUrl: imageUrl.trim() || undefined,
         description: description.trim() || undefined,
         inStock,
+        variations: variations.map((v, i) => ({
+          label: v.label.trim(),
+          price: parseFloat(v.price),
+          inStock: v.inStock,
+          sortOrder: i,
+        })),
       };
       if (editing) {
         await dispatch(
@@ -141,7 +181,16 @@ export function CatalogProductsPage() {
     {
       key: "price",
       header: t("catalog.price"),
-      render: (p: CatalogProduct) => formatPrice(p.price),
+      render: (p: CatalogProduct) => (
+        <span className="inline-flex items-center gap-1.5">
+          {formatPrice(p.price)}
+          {p.variations && p.variations.length > 0 && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              {t("catalog.variationCount", { count: p.variations.length })}
+            </span>
+          )}
+        </span>
+      ),
     },
     {
       key: "category",
@@ -317,6 +366,71 @@ export function CatalogProductsPage() {
             >
               {t("catalog.inStock")}
             </label>
+          </div>
+          <div className="border-t border-gray-200 pt-4">
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                {t("catalog.variations")}
+              </label>
+              <Button variant="secondary" type="button" onClick={addVariation}>
+                <PlusIcon className="h-4 w-4" />
+                {t("catalog.addVariation")}
+              </Button>
+            </div>
+            <p className="text-xs text-gray-500 mb-3">
+              {t("catalog.variationsHint")}
+            </p>
+            {variations.length > 0 && (
+              <div className="space-y-2">
+                <div className="grid grid-cols-[1fr_120px_80px_36px] gap-2 items-center">
+                  <span className="text-xs font-medium text-gray-500">
+                    {t("catalog.variationLabel")}
+                  </span>
+                  <span className="text-xs font-medium text-gray-500">
+                    {t("catalog.price")}
+                  </span>
+                  <span className="text-xs font-medium text-gray-500 text-center">
+                    {t("catalog.stock")}
+                  </span>
+                  <span />
+                </div>
+                {variations.map((v, i) => (
+                  <div
+                    key={i}
+                    className="grid grid-cols-[1fr_120px_80px_36px] gap-2 items-center"
+                  >
+                    <Input
+                      placeholder={t("catalog.variationLabelPlaceholder")}
+                      value={v.label}
+                      onChange={(e) => updateVariation(i, { label: e.target.value })}
+                    />
+                    <Input
+                      type="number"
+                      placeholder="0.00"
+                      value={v.price}
+                      onChange={(e) => updateVariation(i, { price: e.target.value })}
+                    />
+                    <div className="flex justify-center">
+                      <input
+                        type="checkbox"
+                        checked={v.inStock}
+                        onChange={(e) =>
+                          updateVariation(i, { inStock: e.target.checked })
+                        }
+                        className="rounded border-gray-300 text-blue-600"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeVariation(i)}
+                      className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors justify-self-center"
+                    >
+                      <TrashIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         <div className="flex justify-end gap-3 mt-6">
