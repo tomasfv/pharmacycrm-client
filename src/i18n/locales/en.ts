@@ -426,6 +426,7 @@ const en = {
     variationsHint: "Optional. E.g. 120ml, 250ml, 500ml — each variation has its own price and stock.",
     variationLabel: "Variation",
     variationLabelPlaceholder: "e.g. 120ml",
+    sku: "SKU",
     variationRequired: "Each variation needs a label and a price",
     variationCount: "{{count}} variants",
     importCSV: "Import CSV",
@@ -513,7 +514,6 @@ const en = {
     importGroupsCount: "· {{count}} groups",
     importConfirmGroups: "{{count}} products with variations will be imported.",
     importVariationsCreated: "{{count}} variations created",
-    importVariationsUpdated: "{{count}} variations updated",
     importUploadError: "Import failed. Please try again from the review screen.",
   },
 };

@@ -35,7 +35,6 @@ interface ImportSummary {
   updated: number;
   unchanged: number;
   variationsCreated: number;
-  variationsUpdated: number;
   errors: { rowNum: number; sku: string; message: string }[];
 }
 
@@ -46,6 +45,12 @@ interface ImportGroup {
   memberRowNums: number[];
   labels: Record<number, string>;
   excluded: number;
+}
+
+interface ExistingSkuEntry {
+  price: number;
+  categoryName?: string;
+  hasOwnVariations: boolean;
 }
 
 const BATCH_SIZE = 100;
@@ -86,9 +91,25 @@ export function CatalogImportPage() {
   }, [dispatch]);
 
   const existingBySku = useMemo(() => {
-    const map = new Map<string, CatalogProduct>();
+    const map = new Map<string, ExistingSkuEntry>();
     for (const p of products) {
-      if (p.sku) map.set(p.sku, p);
+      const categoryName = p.category?.name;
+      if (p.sku && !map.has(p.sku)) {
+        map.set(p.sku, {
+          price: p.price,
+          categoryName,
+          hasOwnVariations: (p.variations?.length ?? 0) > 0,
+        });
+      }
+      for (const v of p.variations ?? []) {
+        if (v.sku && !map.has(v.sku)) {
+          map.set(v.sku, {
+            price: v.price,
+            categoryName,
+            hasOwnVariations: false,
+          });
+        }
+      }
     }
     return map;
   }, [products]);
@@ -165,6 +186,22 @@ export function CatalogImportPage() {
     }
     return stats;
   }, [rows, selected, statuses]);
+
+  const groupStats = useMemo(() => {
+    const stats = { created: 0, update: 0, unchanged: 0 };
+    for (const g of groups) {
+      if (!productsByName.has(normalizeProductName(g.parentName))) {
+        stats.created += 1;
+      }
+      for (const rn of g.memberRowNums) {
+        const st = statuses.get(rn);
+        if (st === "new") stats.created += 1;
+        else if (st === "priceUpdate") stats.update += 1;
+        else if (st === "unchanged") stats.unchanged += 1;
+      }
+    }
+    return stats;
+  }, [groups, productsByName, statuses]);
 
   const selectedValidCount =
     selectionStats.created + selectionStats.update + selectionStats.unchanged;
@@ -274,15 +311,15 @@ export function CatalogImportPage() {
     });
   };
 
-  const togglePageRows = () => {
-    const validOnPage = paginated.filter(
+  const toggleAllRows = () => {
+    const eligible = filtered.filter(
       (r) => statuses.get(r.rowNum) !== "invalid" && !groupedRowNum.has(r.rowNum),
     );
     const allSelected =
-      validOnPage.length > 0 && validOnPage.every((r) => selected.has(r.rowNum));
+      eligible.length > 0 && eligible.every((r) => selected.has(r.rowNum));
     setSelected((prev) => {
       const next = new Set(prev);
-      for (const r of validOnPage) {
+      for (const r of eligible) {
         if (allSelected) next.delete(r.rowNum);
         else next.add(r.rowNum);
       }
@@ -301,7 +338,7 @@ export function CatalogImportPage() {
       .map((r) => {
         const existing = existingBySku.get(r.sku);
         const categoryName = existing
-          ? existing.category?.name || "Sin categoría"
+          ? existing.categoryName || "Sin categoría"
           : categories.find((c) => c.id === r.categoryId)?.name ||
             "Sin categoría";
         return {
@@ -362,7 +399,7 @@ export function CatalogImportPage() {
         continue;
       }
       const existing = existingBySku.get(r.sku);
-      if (existing && (existing.variations?.length ?? 0) > 0) {
+      if (existing && existing.hasOwnVariations) {
         excluded += 1;
         continue;
       }
@@ -468,7 +505,6 @@ export function CatalogImportPage() {
       updated: 0,
       unchanged: 0,
       variationsCreated: 0,
-      variationsUpdated: 0,
       errors: [],
     };
     let offset = 0;
@@ -477,10 +513,9 @@ export function CatalogImportPage() {
         const { data } = await catalogProductsApi.batchUpsert(batch);
         const r = data.data;
         acc.created += r.created;
-        acc.updated += r.updated;
+        acc.updated += r.updated + (r.variationsUpdated ?? 0);
         acc.unchanged += r.unchanged;
         acc.variationsCreated += r.variationsCreated ?? 0;
-        acc.variationsUpdated += r.variationsUpdated ?? 0;
         for (const e of r.errors) {
           acc.errors.push({
             rowNum:
@@ -582,11 +617,14 @@ export function CatalogImportPage() {
   );
 
   const renderReview = () => {
-    const validOnPage = paginated.filter(
+    const eligibleInScope = filtered.filter(
       (r) => statuses.get(r.rowNum) !== "invalid" && !groupedRowNum.has(r.rowNum),
     );
-    const pageAllSelected =
-      validOnPage.length > 0 && validOnPage.every((r) => selected.has(r.rowNum));
+    const allScopeSelected =
+      eligibleInScope.length > 0 &&
+      eligibleInScope.every((r) => selected.has(r.rowNum));
+    const someScopeSelected =
+      !allScopeSelected && eligibleInScope.some((r) => selected.has(r.rowNum));
     const associableCount = rows.filter(
       (r) =>
         selected.has(r.rowNum) &&
@@ -700,10 +738,13 @@ export function CatalogImportPage() {
                     <th className="py-2 pr-3 w-10">
                       <input
                         type="checkbox"
-                        checked={pageAllSelected}
-                        disabled={validOnPage.length === 0}
-                        onChange={togglePageRows}
-                        className="rounded border-gray-300 text-blue-600"
+                        checked={allScopeSelected}
+                        ref={(el) => {
+                          if (el) el.indeterminate = someScopeSelected;
+                        }}
+                        disabled={eligibleInScope.length === 0}
+                        onChange={toggleAllRows}
+                        className="rounded border-gray-300 text-blue-600 disabled:opacity-40"
                       />
                     </th>
                     <th className="py-2 pr-3 font-medium">{t("catalog.importColSku")}</th>
@@ -801,7 +842,7 @@ export function CatalogImportPage() {
                             />
                           ) : (
                             <span className="text-xs text-gray-500">
-                              {existing?.category?.name || "—"}
+                              {existing?.categoryName || "—"}
                             </span>
                           )}
                         </td>
@@ -949,25 +990,15 @@ export function CatalogImportPage() {
             </div>
           </div>
 
-          {summary &&
-            (summary.variationsCreated > 0 || summary.variationsUpdated > 0) && (
-              <div className="flex justify-center gap-3 flex-wrap">
-                {summary.variationsCreated > 0 && (
-                  <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
-                    {t("catalog.importVariationsCreated", {
-                      count: summary.variationsCreated,
-                    })}
-                  </span>
-                )}
-                {summary.variationsUpdated > 0 && (
-                  <span className="px-3 py-1 rounded-full bg-yellow-50 text-yellow-700 text-xs font-medium">
-                    {t("catalog.importVariationsUpdated", {
-                      count: summary.variationsUpdated,
-                    })}
-                  </span>
-                )}
-              </div>
-            )}
+          {summary && summary.variationsCreated > 0 && (
+            <div className="flex justify-center gap-3 flex-wrap">
+              <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
+                {t("catalog.importVariationsCreated", {
+                  count: summary.variationsCreated,
+                })}
+              </span>
+            </div>
+          )}
 
           {summary && summary.errors.length > 0 && (
             <div className="text-left bg-red-50 border border-red-200 rounded-lg p-4">
@@ -1025,8 +1056,8 @@ export function CatalogImportPage() {
       >
         <p className="text-sm text-gray-600">
           {t("catalog.importConfirmBody", {
-            created: selectionStats.created,
-            updated: selectionStats.update,
+            created: selectionStats.created + groupStats.created,
+            updated: selectionStats.update + groupStats.update,
           })}
         </p>
         {groups.length > 0 && (
