@@ -1,4 +1,5 @@
-import { Bars3Icon, BellIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, BellIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
+import { useTranslation } from 'react-i18next';
 import { useAppSelector } from '@/store/hooks';
 import { selectUnreadCount } from '@/features/notifications/notificationsSlice';
 import { useNavigate } from 'react-router-dom';
@@ -8,7 +9,10 @@ interface HeaderProps {
   onMenuToggle: () => void;
 }
 
+const CATALOG_URL = import.meta.env.VITE_CATALOG_URL || 'http://localhost:3000';
+
 export function Header({ onMenuToggle }: HeaderProps) {
+  const { t } = useTranslation();
   const unreadCount = useAppSelector(selectUnreadCount);
   const user = useAppSelector((state) => state.auth.user);
   const navigate = useNavigate();
@@ -26,6 +30,17 @@ export function Header({ onMenuToggle }: HeaderProps) {
 
       <div className="flex items-center gap-4">
         <LanguageSwitcher />
+
+        <a
+          href={CATALOG_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={t('nav.viewCatalog')}
+          aria-label={t('nav.viewCatalog')}
+          className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-primary-600 transition-colors"
+        >
+          <GlobeAltIcon className="h-5 w-5" />
+        </a>
 
         <button
           onClick={() => navigate('/notifications')}

@@ -47,6 +47,7 @@ const en = {
     catalogProducts: "Products",
     catalogOrders: "Orders",
     catalogImport: "Import CSV",
+    viewCatalog: "View public catalog",
   },
   auth: {
     signIn: "Sign in to your account",

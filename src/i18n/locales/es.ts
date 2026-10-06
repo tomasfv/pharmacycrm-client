@@ -47,6 +47,7 @@ const es = {
     catalogProducts: "Productos",
     catalogOrders: "Órdenes Web",
     catalogImport: "Importar CSV",
+    viewCatalog: "Ver catálogo público",
   },
   auth: {
     signIn: "Inicia sesión en tu cuenta",
