@@ -426,6 +426,7 @@ const es = {
     variationsHint: "Opcional. Ej: 120ml, 250ml, 500ml — cada variación tiene su propio precio y stock.",
     variationLabel: "Variación",
     variationLabelPlaceholder: "ej. 120ml",
+    sku: "Código",
     variationRequired: "Cada variación necesita un nombre y un precio",
     variationCount: "{{count}} variantes",
     importCSV: "Importar CSV",
@@ -513,7 +514,6 @@ const es = {
     importGroupsCount: "· {{count}} grupos",
     importConfirmGroups: "Se importarán {{count}} productos con variaciones.",
     importVariationsCreated: "{{count}} variaciones creadas",
-    importVariationsUpdated: "{{count}} variaciones actualizadas",
     importUploadError: "Error al importar. Volvé a intentarlo desde la revisión.",
   },
 };

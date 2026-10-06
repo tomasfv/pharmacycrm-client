@@ -323,6 +323,12 @@ export function CatalogProductsPage() {
               onChange={(e) => setName(e.target.value)}
               autoFocus
             />
+            {editing && (
+              <p className="mt-1 text-xs text-gray-500">
+                <span className="font-medium">{t("catalog.sku")}:</span>{" "}
+                <span className="font-mono">{editing.sku || "—"}</span>
+              </p>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -412,11 +418,19 @@ export function CatalogProductsPage() {
                     key={i}
                     className="grid grid-cols-[1fr_120px_80px_36px] gap-2 items-center"
                   >
-                    <Input
-                      placeholder={t("catalog.variationLabelPlaceholder")}
-                      value={v.label}
-                      onChange={(e) => updateVariation(i, { label: e.target.value })}
-                    />
+                    <div className="min-w-0">
+                      <Input
+                        placeholder={t("catalog.variationLabelPlaceholder")}
+                        value={v.label}
+                        onChange={(e) => updateVariation(i, { label: e.target.value })}
+                      />
+                      <span
+                        className="block mt-0.5 text-[11px] font-mono text-gray-400 truncate"
+                        title={v.sku || ""}
+                      >
+                        {t("catalog.sku")}: {v.sku || "—"}
+                      </span>
+                    </div>
                     <Input
                       type="number"
                       placeholder="0.00"
