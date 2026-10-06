@@ -15,6 +15,8 @@ import {
   inStockFromRaw,
   chunk,
   decodeCsvBuffer,
+  deriveVariationLabels,
+  normalizeProductName,
 } from "@/utils/csvImport";
 import type { RawImportRow, RowStatus } from "@/utils/csvImport";
 import type { CatalogProduct } from "@/types";
@@ -32,7 +34,18 @@ interface ImportSummary {
   created: number;
   updated: number;
   unchanged: number;
+  variationsCreated: number;
+  variationsUpdated: number;
   errors: { rowNum: number; sku: string; message: string }[];
+}
+
+interface ImportGroup {
+  id: string;
+  parentName: string;
+  parentCategoryId: string;
+  memberRowNums: number[];
+  labels: Record<number, string>;
+  excluded: number;
 }
 
 const BATCH_SIZE = 100;
@@ -63,6 +76,9 @@ export function CatalogImportPage() {
   const [total, setTotal] = useState(0);
   const [summary, setSummary] = useState<ImportSummary | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [groups, setGroups] = useState<ImportGroup[]>([]);
+  const [associateDraft, setAssociateDraft] = useState<ImportGroup | null>(null);
+  const [associateError, setAssociateError] = useState("");
 
   useEffect(() => {
     dispatch(fetchCatalogProducts());
@@ -76,6 +92,36 @@ export function CatalogImportPage() {
     }
     return map;
   }, [products]);
+
+  const productsByName = useMemo(() => {
+    const map = new Map<string, CatalogProduct>();
+    for (const p of products) {
+      map.set(normalizeProductName(p.name), p);
+    }
+    return map;
+  }, [products]);
+
+  const groupedRowNum = useMemo(() => {
+    const map = new Map<number, ImportGroup>();
+    for (const g of groups) {
+      for (const rn of g.memberRowNums) map.set(rn, g);
+    }
+    return map;
+  }, [groups]);
+
+  const rowNumBySku = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const r of rows) {
+      if (r.sku && !map.has(r.sku)) map.set(r.sku, r.rowNum);
+    }
+    return map;
+  }, [rows]);
+
+  const rowByRowNum = useMemo(() => {
+    const map = new Map<number, RawImportRow>();
+    for (const r of rows) map.set(r.rowNum, r);
+    return map;
+  }, [rows]);
 
   const statuses = useMemo(() => {
     const map = new Map<number, RowStatus>();
@@ -136,7 +182,8 @@ export function CatalogImportPage() {
     }
     return n;
   }, [rows, selected, statuses]);
-  const canImport = selectedValidCount > 0 && missingCategoryCount === 0;
+  const canImport =
+    (selectedValidCount > 0 || groups.length > 0) && missingCategoryCount === 0;
 
   const statusVariant = (st: RowStatus) =>
     st === "new"
@@ -161,6 +208,9 @@ export function CatalogImportPage() {
     setSummary(null);
     setProcessed(0);
     setTotal(0);
+    setGroups([]);
+    setAssociateDraft(null);
+    setAssociateError("");
   };
 
   const handleFile = async (file: File) => {
@@ -215,6 +265,7 @@ export function CatalogImportPage() {
 
   const toggleRow = (row: RawImportRow) => {
     if (statuses.get(row.rowNum) === "invalid") return;
+    if (groupedRowNum.has(row.rowNum)) return;
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(row.rowNum)) next.delete(row.rowNum);
@@ -224,7 +275,9 @@ export function CatalogImportPage() {
   };
 
   const togglePageRows = () => {
-    const validOnPage = paginated.filter((r) => statuses.get(r.rowNum) !== "invalid");
+    const validOnPage = paginated.filter(
+      (r) => statuses.get(r.rowNum) !== "invalid" && !groupedRowNum.has(r.rowNum),
+    );
     const allSelected =
       validOnPage.length > 0 && validOnPage.every((r) => selected.has(r.rowNum));
     setSelected((prev) => {
@@ -237,10 +290,13 @@ export function CatalogImportPage() {
     });
   };
 
-  const buildPayloadRows = () => {
-    return rows
+  const buildSendRows = (): { rowNum: number; item: Record<string, unknown> }[] => {
+    const flat = rows
       .filter(
-        (r) => selected.has(r.rowNum) && statuses.get(r.rowNum) !== "invalid",
+        (r) =>
+          selected.has(r.rowNum) &&
+          statuses.get(r.rowNum) !== "invalid" &&
+          !groupedRowNum.has(r.rowNum),
       )
       .map((r) => {
         const existing = existingBySku.get(r.sku);
@@ -259,11 +315,147 @@ export function CatalogImportPage() {
           },
         };
       });
+
+    const grouped = groups.map((g) => {
+      const memberRows = g.memberRowNums
+        .map((rn) => rowByRowNum.get(rn))
+        .filter((r): r is RawImportRow => Boolean(r));
+      const first = memberRows[0];
+      const parentExisting = productsByName.get(normalizeProductName(g.parentName));
+      const categoryName = parentExisting
+        ? parentExisting.category?.name || "Sin categoría"
+        : categories.find((c) => c.id === g.parentCategoryId)?.name ||
+          "Sin categoría";
+      return {
+        rowNum: first?.rowNum ?? 0,
+        item: {
+          name: g.parentName.trim(),
+          price: first ? (parseNumber(first.priceRaw) as number) : 0,
+          categoryName,
+          inStock: true,
+          variations: memberRows.map((r) => ({
+            sku: r.sku,
+            label: (g.labels[r.rowNum] ?? "").trim(),
+            price: parseNumber(r.priceRaw) as number,
+            inStock: inStockFromRaw(r.stockRaw),
+          })),
+        },
+      };
+    });
+
+    return [...flat, ...grouped];
+  };
+
+  const openAssociate = () => {
+    const members = rows.filter(
+      (r) =>
+        selected.has(r.rowNum) &&
+        statuses.get(r.rowNum) !== "invalid" &&
+        !groupedRowNum.has(r.rowNum),
+    );
+    const valid: RawImportRow[] = [];
+    const seen = new Set<string>();
+    let excluded = 0;
+    for (const r of members) {
+      if (seen.has(r.sku)) {
+        excluded += 1;
+        continue;
+      }
+      const existing = existingBySku.get(r.sku);
+      if (existing && (existing.variations?.length ?? 0) > 0) {
+        excluded += 1;
+        continue;
+      }
+      seen.add(r.sku);
+      valid.push(r);
+    }
+    if (valid.length < 2) {
+      showSnackbar(t("catalog.importAssociateMin"), "error");
+      return;
+    }
+    const labels = deriveVariationLabels(valid.map((r) => r.name));
+    setAssociateError("");
+    setAssociateDraft({
+      id:
+        typeof crypto !== "undefined" && crypto.randomUUID
+          ? crypto.randomUUID()
+          : String(Date.now() + Math.random()),
+      parentName: "",
+      parentCategoryId:
+        newCategoryId || valid.find((r) => r.categoryId)?.categoryId || "",
+      memberRowNums: valid.map((r) => r.rowNum),
+      labels: Object.fromEntries(valid.map((r, i) => [r.rowNum, labels[i]])),
+      excluded,
+    });
+  };
+
+  const closeAssociate = () => {
+    setAssociateDraft(null);
+    setAssociateError("");
+  };
+
+  const updateDraft = (patch: Partial<ImportGroup>) => {
+    setAssociateDraft((prev) => (prev ? { ...prev, ...patch } : prev));
+    setAssociateError("");
+  };
+
+  const updateDraftLabel = (rowNum: number, value: string) => {
+    setAssociateDraft((prev) =>
+      prev ? { ...prev, labels: { ...prev.labels, [rowNum]: value } } : prev,
+    );
+    setAssociateError("");
+  };
+
+  const removeGroup = (groupId: string) => {
+    const group = groups.find((g) => g.id === groupId);
+    setGroups((prev) => prev.filter((g) => g.id !== groupId));
+    if (group) {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        for (const rn of group.memberRowNums) {
+          if (statuses.get(rn) !== "invalid") next.add(rn);
+        }
+        return next;
+      });
+    }
+  };
+
+  const confirmAssociate = () => {
+    const draft = associateDraft;
+    if (!draft) return;
+    const parentName = draft.parentName.trim();
+    if (!parentName) {
+      setAssociateError(t("catalog.importAssociateNameRequired"));
+      return;
+    }
+    const parentExisting = productsByName.get(normalizeProductName(parentName));
+    if (!parentExisting && !draft.parentCategoryId) {
+      setAssociateError(t("catalog.importAssociateCategoryRequired"));
+      return;
+    }
+    if (draft.memberRowNums.some((rn) => !(draft.labels[rn] ?? "").trim())) {
+      setAssociateError(t("catalog.importAssociateLabelRequired"));
+      return;
+    }
+    if (parentExisting?.sku) {
+      const parentSku = parentExisting.sku;
+      if (draft.memberRowNums.filter((rn) => rowByRowNum.get(rn)?.sku === parentSku).length > 0) {
+        setAssociateError(t("catalog.importExcludeIsParent"));
+        return;
+      }
+    }
+    setGroups((prev) => [...prev, { ...draft, parentName }]);
+    setSelected((prev) => {
+      const next = new Set(prev);
+      for (const rn of draft.memberRowNums) next.delete(rn);
+      return next;
+    });
+    closeAssociate();
   };
 
   const runImport = async () => {
-    const payloadRows = buildPayloadRows();
-    const items = payloadRows.map((p) => p.item);
+    const sendRows = buildSendRows();
+    const items = sendRows.map((p) => p.item);
     const batches = chunk(items, BATCH_SIZE);
     setConfirmOpen(false);
     setSummary(null);
@@ -271,7 +463,14 @@ export function CatalogImportPage() {
     setTotal(items.length);
     setPhase("importing");
 
-    const acc: ImportSummary = { created: 0, updated: 0, unchanged: 0, errors: [] };
+    const acc: ImportSummary = {
+      created: 0,
+      updated: 0,
+      unchanged: 0,
+      variationsCreated: 0,
+      variationsUpdated: 0,
+      errors: [],
+    };
     let offset = 0;
     try {
       for (const batch of batches) {
@@ -280,9 +479,14 @@ export function CatalogImportPage() {
         acc.created += r.created;
         acc.updated += r.updated;
         acc.unchanged += r.unchanged;
+        acc.variationsCreated += r.variationsCreated ?? 0;
+        acc.variationsUpdated += r.variationsUpdated ?? 0;
         for (const e of r.errors) {
           acc.errors.push({
-            rowNum: payloadRows[offset + e.index]?.rowNum ?? 0,
+            rowNum:
+              (e.sku ? rowNumBySku.get(e.sku) : undefined) ??
+              sendRows[offset + e.index]?.rowNum ??
+              0,
             sku: e.sku,
             message: e.message,
           });
@@ -378,9 +582,17 @@ export function CatalogImportPage() {
   );
 
   const renderReview = () => {
-    const validOnPage = paginated.filter((r) => statuses.get(r.rowNum) !== "invalid");
+    const validOnPage = paginated.filter(
+      (r) => statuses.get(r.rowNum) !== "invalid" && !groupedRowNum.has(r.rowNum),
+    );
     const pageAllSelected =
       validOnPage.length > 0 && validOnPage.every((r) => selected.has(r.rowNum));
+    const associableCount = rows.filter(
+      (r) =>
+        selected.has(r.rowNum) &&
+        statuses.get(r.rowNum) !== "invalid" &&
+        !groupedRowNum.has(r.rowNum),
+    ).length;
 
     return (
       <div className="space-y-4">
@@ -457,6 +669,30 @@ export function CatalogImportPage() {
               </div>
             )}
 
+            {groups.length > 0 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                {groups.map((g) => (
+                  <span
+                    key={g.id}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium"
+                  >
+                    {t("catalog.importGroupChip", {
+                      name: g.parentName,
+                      count: g.memberRowNums.length,
+                    })}
+                    <button
+                      type="button"
+                      aria-label={t("catalog.importGroupRemove")}
+                      onClick={() => removeGroup(g.id)}
+                      className="text-blue-400 hover:text-blue-700"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -490,19 +726,21 @@ export function CatalogImportPage() {
                     const st = statuses.get(row.rowNum) ?? "invalid";
                     const existing = existingBySku.get(row.sku);
                     const isInvalid = st === "invalid";
+                    const group = groupedRowNum.get(row.rowNum);
                     return (
                       <tr
                         key={row.rowNum}
                         className={cn(
                           "border-b border-gray-100",
                           isInvalid && "bg-red-50",
+                          group && "bg-blue-50/40",
                         )}
                       >
                         <td className="py-2 pr-3">
                           <input
                             type="checkbox"
-                            checked={selected.has(row.rowNum) && !isInvalid}
-                            disabled={isInvalid}
+                            checked={group ? true : selected.has(row.rowNum) && !isInvalid}
+                            disabled={isInvalid || Boolean(group)}
                             onChange={() => toggleRow(row)}
                             className="rounded border-gray-300 text-blue-600 disabled:opacity-40"
                           />
@@ -516,6 +754,13 @@ export function CatalogImportPage() {
                             onChange={(e) => updateRow(row.rowNum, { name: e.target.value })}
                             className="w-full"
                           />
+                          {group && (
+                            <Badge variant="info" className="mt-1">
+                              {t("catalog.importGroupBadge", {
+                                name: group.parentName,
+                              })}
+                            </Badge>
+                          )}
                           {isInvalid && (
                             <span className="text-xs text-red-600">
                               {t("catalog.importStatus_invalid")}
@@ -610,6 +855,11 @@ export function CatalogImportPage() {
                   created: selectionStats.created,
                   updated: selectionStats.update,
                 })}
+                {groups.length > 0 && (
+                  <span className="ml-2 text-blue-700">
+                    {t("catalog.importGroupsCount", { count: groups.length })}
+                  </span>
+                )}
                 {missingCategoryCount > 0 && (
                   <span className="text-red-600 ml-2">
                     {t("catalog.importNewCategoryRequired", {
@@ -621,6 +871,13 @@ export function CatalogImportPage() {
               <div className="flex gap-3">
                 <Button variant="secondary" onClick={resetToUpload}>
                   {t("common.cancel")}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={openAssociate}
+                  disabled={associableCount < 2}
+                >
+                  {t("catalog.importAssociate", { count: associableCount })}
                 </Button>
                 <Button onClick={() => setConfirmOpen(true)} disabled={!canImport}>
                   {t("catalog.importAction", { count: selectedValidCount })}
@@ -692,6 +949,26 @@ export function CatalogImportPage() {
             </div>
           </div>
 
+          {summary &&
+            (summary.variationsCreated > 0 || summary.variationsUpdated > 0) && (
+              <div className="flex justify-center gap-3 flex-wrap">
+                {summary.variationsCreated > 0 && (
+                  <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
+                    {t("catalog.importVariationsCreated", {
+                      count: summary.variationsCreated,
+                    })}
+                  </span>
+                )}
+                {summary.variationsUpdated > 0 && (
+                  <span className="px-3 py-1 rounded-full bg-yellow-50 text-yellow-700 text-xs font-medium">
+                    {t("catalog.importVariationsUpdated", {
+                      count: summary.variationsUpdated,
+                    })}
+                  </span>
+                )}
+              </div>
+            )}
+
           {summary && summary.errors.length > 0 && (
             <div className="text-left bg-red-50 border border-red-200 rounded-lg p-4">
               <p className="text-sm font-medium text-red-700 mb-2">
@@ -752,12 +1029,125 @@ export function CatalogImportPage() {
             updated: selectionStats.update,
           })}
         </p>
+        {groups.length > 0 && (
+          <p className="text-sm text-blue-700 mt-2">
+            {t("catalog.importConfirmGroups", { count: groups.length })}
+          </p>
+        )}
         <div className="flex justify-end gap-3 mt-6">
           <Button variant="secondary" onClick={() => setConfirmOpen(false)}>
             {t("common.cancel")}
           </Button>
           <Button onClick={runImport}>{t("catalog.importConfirmAction")}</Button>
         </div>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(associateDraft)}
+        onClose={closeAssociate}
+        title={t("catalog.importAssociateTitle")}
+        size="lg"
+        draggable
+      >
+        {associateDraft && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {t("catalog.importAssociateNameLabel")}
+              </label>
+              <Input
+                value={associateDraft.parentName}
+                onChange={(e) => updateDraft({ parentName: e.target.value })}
+                placeholder={t("catalog.importAssociateNamePlaceholder")}
+              />
+              {productsByName.get(
+                normalizeProductName(associateDraft.parentName.trim()),
+              ) && (
+                <p className="text-xs text-blue-700 mt-1">
+                  {t("catalog.importAssociateExisting", {
+                    name: productsByName.get(
+                      normalizeProductName(associateDraft.parentName.trim()),
+                    )!.name,
+                  })}
+                </p>
+              )}
+            </div>
+
+            {!productsByName.get(
+              normalizeProductName(associateDraft.parentName.trim()),
+            ) && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t("catalog.importAssociateCategory")}
+                </label>
+                <Select
+                  value={associateDraft.parentCategoryId}
+                  onChange={(e) =>
+                    updateDraft({ parentCategoryId: e.target.value })
+                  }
+                  options={categories.map((c) => ({
+                    value: c.id,
+                    label: c.name,
+                  }))}
+                  placeholder={t("catalog.selectCategory")}
+                />
+              </div>
+            )}
+
+            <p className="text-xs text-gray-500">
+              {t("catalog.importAssociateHint")}
+            </p>
+
+            {associateDraft.excluded > 0 && (
+              <p className="text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
+                {t("catalog.importAssociateExcluded", {
+                  count: associateDraft.excluded,
+                })}
+              </p>
+            )}
+
+            <div className="border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-72 overflow-y-auto">
+              {associateDraft.memberRowNums.map((rn) => {
+                const member = rowByRowNum.get(rn);
+                if (!member) return null;
+                const price = parseNumber(member.priceRaw);
+                return (
+                  <div
+                    key={rn}
+                    className="flex items-center gap-3 px-3 py-2"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <Input
+                        value={associateDraft.labels[rn] ?? ""}
+                        onChange={(e) => updateDraftLabel(rn, e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                    <span className="font-mono text-xs text-gray-500 w-24 shrink-0">
+                      {member.sku}
+                    </span>
+                    <span className="text-xs text-gray-600 w-24 text-right shrink-0">
+                      {price !== null ? formatPrice(price) : "—"}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {associateError && (
+              <p className="text-sm text-red-600">{associateError}</p>
+            )}
+
+            <div className="flex justify-end gap-3 mt-6">
+              <Button variant="secondary" onClick={closeAssociate}>
+                {t("common.cancel")}
+              </Button>
+              <Button onClick={confirmAssociate}>
+                {t("catalog.importAssociateAction")}
+              </Button>
+            </div>
+          </div>
+        )}
       </Dialog>
     </div>
   );

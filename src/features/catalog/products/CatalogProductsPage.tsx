@@ -23,6 +23,7 @@ import { useSnackbar } from "@/components/ui";
 
 interface VariationDraft {
   label: string;
+  sku?: string | null;
   price: string;
   inStock: boolean;
 }
@@ -99,6 +100,7 @@ export function CatalogProductsPage() {
     setVariations(
       (p.variations ?? []).map((v) => ({
         label: v.label,
+        sku: v.sku,
         price: String(v.price),
         inStock: v.inStock,
       })),
@@ -139,6 +141,7 @@ export function CatalogProductsPage() {
         inStock,
         variations: variations.map((v, i) => ({
           label: v.label.trim(),
+          sku: v.sku || undefined,
           price: parseFloat(v.price),
           inStock: v.inStock,
           sortOrder: i,

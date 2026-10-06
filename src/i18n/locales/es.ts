@@ -490,6 +490,30 @@ const es = {
     importConfirmBody:
       "Se crearán {{created}} productos nuevos y se actualizarán {{updated}} precios. Los productos existentes solo cambian de precio.",
     importConfirmAction: "Importar",
+    importAssociate: "Asociar seleccionados ({{count}})",
+    importAssociateTitle: "Asociar como producto con variaciones",
+    importAssociateNameLabel: "Nombre del producto principal",
+    importAssociateNamePlaceholder: "Ej.: Aerolin Inhalador",
+    importAssociateExisting:
+      "Producto existente: {{name}}. Se le agregarán estas variaciones.",
+    importAssociateHint:
+      "Cada fila seleccionada se convertirá en una variación de este producto; el código (SKU) queda guardado en la variación.",
+    importAssociateExcluded:
+      "{{count}} filas se excluyeron (SKU repetido o producto con variaciones propias).",
+    importAssociateNameRequired: "Ingresá el nombre del producto principal.",
+    importAssociateCategoryRequired: "Elegí una categoría para el producto.",
+    importAssociateLabelRequired: "Todos los nombres de variación son obligatorios.",
+    importAssociateMin: "Seleccioná al menos 2 filas válidas para asociar.",
+    importAssociateAction: "Asociar",
+    importExcludeIsParent:
+      "Una fila tiene el mismo código que el producto principal; quitá esa fila del grupo.",
+    importGroupChip: "{{name}} ({{count}})",
+    importGroupRemove: "Quitar grupo",
+    importGroupBadge: "Variación de: {{name}}",
+    importGroupsCount: "· {{count}} grupos",
+    importConfirmGroups: "Se importarán {{count}} productos con variaciones.",
+    importVariationsCreated: "{{count}} variaciones creadas",
+    importVariationsUpdated: "{{count}} variaciones actualizadas",
     importUploadError: "Error al importar. Volvé a intentarlo desde la revisión.",
   },
 };

@@ -4,6 +4,7 @@ export interface CatalogProductVariation {
   id?: string;
   productId?: string;
   label: string;
+  sku?: string | null;
   price: number;
   inStock: boolean;
   sortOrder?: number;
@@ -33,5 +34,7 @@ export interface CatalogBatchResult {
   created: number;
   updated: number;
   unchanged: number;
+  variationsCreated?: number;
+  variationsUpdated?: number;
   errors: CatalogBatchError[];
 }

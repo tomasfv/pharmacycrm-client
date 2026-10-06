@@ -489,6 +489,30 @@ const en = {
     importConfirmBody:
       "{{created}} new products will be created and {{updated}} prices updated. Existing products only change price.",
     importConfirmAction: "Import",
+    importAssociate: "Associate selected ({{count}})",
+    importAssociateTitle: "Associate as product with variations",
+    importAssociateNameLabel: "Parent product name",
+    importAssociateNamePlaceholder: "e.g.: Aerolin Inhalador",
+    importAssociateExisting:
+      "Existing product: {{name}}. These variations will be added to it.",
+    importAssociateHint:
+      "Each selected row will become a variation of this product; the SKU is stored on the variation.",
+    importAssociateExcluded:
+      "{{count}} rows were excluded (duplicate SKU or product with its own variations).",
+    importAssociateNameRequired: "Enter the parent product name.",
+    importAssociateCategoryRequired: "Choose a category for the product.",
+    importAssociateLabelRequired: "All variation names are required.",
+    importAssociateMin: "Select at least 2 valid rows to associate.",
+    importAssociateAction: "Associate",
+    importExcludeIsParent:
+      "A row has the same SKU as the parent product; remove that row from the group.",
+    importGroupChip: "{{name}} ({{count}})",
+    importGroupRemove: "Remove group",
+    importGroupBadge: "Variation of: {{name}}",
+    importGroupsCount: "· {{count}} groups",
+    importConfirmGroups: "{{count}} products with variations will be imported.",
+    importVariationsCreated: "{{count}} variations created",
+    importVariationsUpdated: "{{count}} variations updated",
     importUploadError: "Import failed. Please try again from the review screen.",
   },
 };

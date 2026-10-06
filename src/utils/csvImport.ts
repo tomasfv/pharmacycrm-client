@@ -172,3 +172,42 @@ export function chunk<T>(items: T[], size: number): T[][] {
   }
   return chunks;
 }
+
+export function normalizeProductName(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ");
+}
+
+export function deriveVariationLabels(names: string[]): string[] {
+  if (names.length === 0) return [];
+  const trimmed = names.map((n) => n.trim());
+  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  const lastWord = (s: string) => s.split(/\s+/).filter(Boolean).pop() ?? s;
+
+  if (trimmed.length === 1) {
+    return [capitalize(lastWord(trimmed[0]))];
+  }
+
+  const tokens = trimmed.map((n) => n.split(/\s+/));
+  const firstLower = tokens[0].map((t) => t.toLowerCase());
+  let prefixCount = 0;
+  while (
+    prefixCount < firstLower.length &&
+    tokens.every((tk) => tk[prefixCount] && tk[prefixCount].toLowerCase() === firstLower[prefixCount])
+  ) {
+    prefixCount += 1;
+  }
+  const maxLen = Math.max(...tokens.map((tk) => tk.length));
+  prefixCount = Math.min(prefixCount, maxLen - 1);
+
+  return trimmed.map((name, idx) => {
+    const words = name.split(/\s+/);
+    let label = words.slice(prefixCount).join(" ").trim();
+    if (!label) label = `Var ${idx + 1}`;
+    return capitalize(label);
+  });
+}
