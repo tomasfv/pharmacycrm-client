@@ -406,6 +406,7 @@ const es = {
     deleteConfirm: "¿Estás seguro de que deseas eliminar este elemento?",
     create: "Crear",
     orderDate: "Fecha",
+    orderId: "ID del pedido",
     customerName: "Cliente",
     customerPhone: "Teléfono",
     delivery: "Entrega",

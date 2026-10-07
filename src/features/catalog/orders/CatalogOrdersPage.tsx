@@ -48,6 +48,14 @@ export function CatalogOrdersPage() {
 
   const columns = [
     {
+      key: 'id',
+      header: t('catalog.orderId'),
+      sortable: true,
+      render: (o: CatalogOrder) => (
+        <span className="font-mono text-xs text-gray-500">{o.id}</span>
+      ),
+    },
+    {
       key: 'createdAt',
       header: t('catalog.orderDate'),
       sortable: true,
@@ -123,6 +131,10 @@ export function CatalogOrdersPage() {
       <Dialog open={!!viewing} onClose={() => setViewing(null)} afterLeave={() => { displayedRef.current = null; }} title={t('catalog.orderDetail')} size="lg">
         {displayed && (
           <div className="space-y-4">
+            <div>
+              <p className="text-sm text-gray-500">{t('catalog.orderId')}</p>
+              <p className="font-mono text-sm break-all">{displayed.id}</p>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-500">{t('catalog.customerName')}</p>

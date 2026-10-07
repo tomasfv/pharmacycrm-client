@@ -405,6 +405,7 @@ const en = {
     deleteConfirm: "Are you sure you want to delete this item?",
     create: "Create",
     orderDate: "Date",
+    orderId: "Order ID",
     customerName: "Customer",
     customerPhone: "Phone",
     delivery: "Delivery",
