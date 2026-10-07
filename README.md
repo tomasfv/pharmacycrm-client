@@ -151,6 +151,7 @@ The client starts on **http://localhost:5173** with API requests proxied to `loc
 | Variable | Description |
 |---|---|
 | `VITE_API_URL` | API base URL for production (e.g. `https://api.example.com/api`). Falls back to `/api` in dev (proxied by Vite). |
+| `VITE_CATALOG_URL` | Catalog URL used by the header globe link. Falls back to `http://localhost:3000` in dev. |
 
 ---
 
@@ -260,4 +261,4 @@ All models use UUID primary keys and include `createdAt` / `updatedAt` timestamp
 ## Deployment
 
 - **Backend**: Deployed on Railway. The `DB_DEPLOY` environment variable provides a full PostgreSQL connection URL with SSL. On first deploy, the admin user is auto-created.
-- **Frontend**: Deployed on Vercel. Set `VITE_API_URL` to the Railway API URL. `vercel.json` rewrites all routes to `index.html` for SPA support.
+- **Frontend**: Deployed on Vercel. Set `VITE_API_URL` to the Railway API URL and `VITE_CATALOG_URL` to the catalog URL (the header globe link). `vercel.json` rewrites all routes to `index.html` for SPA support.

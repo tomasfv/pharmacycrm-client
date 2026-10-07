@@ -87,7 +87,7 @@ export function CatalogOrdersPage() {
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input placeholder={t('catalog.searchOrders')} value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="pl-9" />
         </div>
-        <DataGrid columns={columns} data={paginated} keyExtractor={(o) => o.id} page={page} totalPages={totalPages} onPageChange={setPage} emptyMessage={t('catalog.empty')} />
+        <DataGrid columns={columns} data={paginated} keyExtractor={(o) => o.id} page={page} totalPages={totalPages} onPageChange={setPage} emptyMessage={t('catalog.empty')} onRowClick={setViewing} />
       </Card>
 
       <Dialog open={!!viewing} onClose={() => setViewing(null)} afterLeave={() => { displayedRef.current = null; }} title={t('catalog.orderDetail')} size="lg">

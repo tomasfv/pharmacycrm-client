@@ -416,7 +416,7 @@ export function CatalogProductsPage() {
                 {variations.map((v, i) => (
                   <div
                     key={i}
-                    className="grid grid-cols-[1fr_120px_80px_36px] gap-2 items-center"
+                    className="grid grid-cols-[1fr_120px_80px_36px] gap-2 items-start"
                   >
                     <div className="min-w-0">
                       <Input
@@ -437,7 +437,7 @@ export function CatalogProductsPage() {
                       value={v.price}
                       onChange={(e) => updateVariation(i, { price: e.target.value })}
                     />
-                    <div className="flex justify-center">
+                    <div className="flex h-9 items-center justify-center">
                       <input
                         type="checkbox"
                         checked={v.inStock}
@@ -450,7 +450,7 @@ export function CatalogProductsPage() {
                     <button
                       type="button"
                       onClick={() => removeVariation(i)}
-                      className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors justify-self-center"
+                      className="flex h-9 items-center justify-center p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors justify-self-center"
                     >
                       <TrashIcon className="h-4 w-4" />
                     </button>
