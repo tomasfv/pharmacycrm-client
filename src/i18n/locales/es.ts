@@ -373,6 +373,7 @@ const es = {
     newProduct: "Nuevo Producto",
     editProduct: "Editar Producto",
     deleteProduct: "Eliminar Producto",
+    deleteOrder: "Eliminar Orden",
     categoryName: "Nombre de Categoría",
     categoryNamePlaceholder: "ej. Perfumería",
     productName: "Nombre del Producto",

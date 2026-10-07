@@ -1,15 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { fetchCatalogOrders } from './catalogOrdersSlice';
-import { DataGrid, Card, Dialog, Button, Input } from '@/components/ui';
+import { fetchCatalogOrders, deleteCatalogOrder } from './catalogOrdersSlice';
+import { DataGrid, Card, Dialog, Button, Input, useSnackbar } from '@/components/ui';
 import type { CatalogOrder } from '@/types';
 import { formatDate, formatPrice } from '@/utils';
-import { MagnifyingGlassIcon, EyeIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, EyeIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 export function CatalogOrdersPage() {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
+  const { showSnackbar } = useSnackbar();
   const orders = useAppSelector((state) => state.catalogOrders.orders);
   const loading = useAppSelector((state) => state.catalogOrders.loading);
 
@@ -21,6 +22,7 @@ export function CatalogOrdersPage() {
   const [page, setPage] = useState(1);
   const perPage = 10;
   const [viewing, setViewing] = useState<CatalogOrder | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const displayedRef = useRef<CatalogOrder | null>(null);
 
   if (viewing) displayedRef.current = viewing;
@@ -32,6 +34,17 @@ export function CatalogOrdersPage() {
   );
   const totalPages = Math.ceil(filtered.length / perPage);
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    try {
+      await dispatch(deleteCatalogOrder(deleteId)).unwrap();
+      setDeleteId(null);
+      showSnackbar(t('catalog.deletedSuccess'), 'success');
+    } catch {
+      showSnackbar(t('catalog.deleteError'), 'error');
+    }
+  };
 
   const columns = [
     {
@@ -68,9 +81,26 @@ export function CatalogOrdersPage() {
       key: 'actions',
       header: t('catalog.actions'),
       render: (o: CatalogOrder) => (
-        <button onClick={() => setViewing(o)} className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
-          <EyeIcon className="h-4 w-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setViewing(o);
+            }}
+            className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+          >
+            <EyeIcon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setDeleteId(o.id);
+            }}
+            className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+          >
+            <TrashIcon className="h-4 w-4" />
+          </button>
+        </div>
       ),
     },
   ];
@@ -136,6 +166,14 @@ export function CatalogOrdersPage() {
         )}
         <div className="flex justify-end mt-6">
           <Button variant="secondary" onClick={() => setViewing(null)}>{t('catalog.close')}</Button>
+        </div>
+      </Dialog>
+
+      <Dialog open={!!deleteId} onClose={() => setDeleteId(null)} title={t('catalog.deleteOrder')} size="sm">
+        <p className="text-sm text-gray-600 mb-4">{t('catalog.deleteConfirm')}</p>
+        <div className="flex justify-end gap-3">
+          <Button variant="secondary" onClick={() => setDeleteId(null)}>{t('common.cancel')}</Button>
+          <Button variant="danger" onClick={handleDelete}>{t('common.delete')}</Button>
         </div>
       </Dialog>
     </div>

@@ -26,6 +26,18 @@ export const fetchCatalogOrders = createAsyncThunk(
   },
 );
 
+export const deleteCatalogOrder = createAsyncThunk(
+  'catalogOrders/delete',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      await catalogOrdersApi.remove(id);
+      return id;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || 'Failed to delete order');
+    }
+  },
+);
+
 const catalogOrdersSlice = createSlice({
   name: 'catalogOrders',
   initialState,
@@ -34,7 +46,10 @@ const catalogOrdersSlice = createSlice({
     builder
       .addCase(fetchCatalogOrders.pending, (state) => { state.loading = true; state.error = null; })
       .addCase(fetchCatalogOrders.fulfilled, (state, action) => { state.loading = false; state.orders = action.payload; })
-      .addCase(fetchCatalogOrders.rejected, (state, action) => { state.loading = false; state.error = action.payload as string; });
+      .addCase(fetchCatalogOrders.rejected, (state, action) => { state.loading = false; state.error = action.payload as string; })
+      .addCase(deleteCatalogOrder.fulfilled, (state, action) => {
+        state.orders = state.orders.filter((o) => o.id !== action.payload);
+      });
   },
 });
 

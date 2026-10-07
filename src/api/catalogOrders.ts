@@ -9,4 +9,5 @@ export const catalogOrdersApi = {
     apiClient.get<ApiResponse<CatalogOrder>>(`/catalog/orders/${id}`),
   create: (data: Record<string, unknown>) =>
     apiClient.post<ApiResponse<CatalogOrder>>('/catalog/orders', data),
+  remove: (id: string) => apiClient.delete(`/catalog/orders/${id}`),
 };

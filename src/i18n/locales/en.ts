@@ -372,6 +372,7 @@ const en = {
     newProduct: "New Product",
     editProduct: "Edit Product",
     deleteProduct: "Delete Product",
+    deleteOrder: "Delete Order",
     categoryName: "Category Name",
     categoryNamePlaceholder: "e.g. Perfumes",
     productName: "Product Name",
